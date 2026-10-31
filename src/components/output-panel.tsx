@@ -1,23 +1,18 @@
 import { useLanguage } from '@/i18n/provider';
-import { CircleHelp, Headphones, RefreshCw, Volume2 } from 'lucide-react';
+import { CircleHelp, RefreshCw, Volume2 } from 'lucide-react';
 import type { CindermicModel } from '@/hooks/use-cindermic';
 
 export function OutputPanel({ model }: { model: CindermicModel }) {
   const { t } = useLanguage();
   if (model.phone)
     return (
-      <section className="output-panel glass">
+      <section className="output-panel">
         <h2>{t('desktopSound')}</h2>
         <p>{t('desktopSoundHint')}</p>
       </section>
     );
   return (
-    <section className="output-panel glass">
-      <div className="output-icon floating">
-        <Headphones size={30} />
-      </div>
-      <h2>{t('outputTitle')}</h2>
-      <p>{t('outputDescription')}</p>
+    <section className="output-panel">
       <div className="output-selector">
         <label htmlFor="device">{t('outputDevice')}</label>
         <div>

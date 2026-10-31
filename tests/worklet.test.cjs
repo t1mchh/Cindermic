@@ -66,3 +66,44 @@ test('underrun produces silence instead of repeating the last sample', () => {
   );
   assert.ok(Number.isFinite(worklet.read));
 });
+
+test('capture worklet produces receiver-compatible CND1 packets and muted silence', () => {
+  const { validPacket } = require('../server/receiver.cjs');
+  let Processor;
+  const packets = [];
+  const context = vm.createContext({
+    AudioWorkletProcessor: class {
+      constructor() {
+        this.port = { postMessage: (packet) => packets.push(packet) };
+      }
+    },
+    registerProcessor: (_, value) => {
+      Processor = value;
+    },
+  });
+  vm.runInContext(
+    fs.readFileSync(require.resolve('../public/capture-worklet.js'), 'utf8'),
+    context,
+  );
+  const capture = new Processor();
+  capture.process([[new Float32Array(960).fill(0.5)]]);
+  assert.equal(validPacket(new Uint8Array(packets[0])), true);
+  assert.equal(Buffer.from(packets[0]).subarray(0, 4).toString(), 'CND1');
+  assert.equal(new DataView(packets[0]).getInt16(12, true), 16383);
+  capture.port.onmessage({ data: { muted: true } });
+  capture.process([[new Float32Array(960).fill(0.5)]]);
+  assert.equal(
+    Buffer.from(packets[1])
+      .subarray(12)
+      .every((value) => value === 0),
+    true,
+  );
+});
+
+test('playback consumes audio at the actual output sample rate', () => {
+  const worklet = processor();
+  feed(worklet, 5);
+  const before = worklet.count;
+  worklet.process([], [[new Float32Array(128)]]);
+  assert.equal(before - worklet.count, 128);
+});

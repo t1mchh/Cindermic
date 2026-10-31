@@ -1,4 +1,4 @@
-import { access, copyFile, mkdir, readFile, writeFile, rm } from 'node:fs/promises';
+import { access, copyFile, mkdir, readFile, writeFile, rm, readdir } from 'node:fs/promises';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
@@ -37,6 +37,7 @@ await writeFile(
 const info = path.join(root, 'ios/App/App/Info.plist');
 let plist = await readFile(info, 'utf8');
 const additions = {
+  NSCameraUsageDescription: '<string>Scan the QR code shown by your Cindermic desktop.</string>',
   NSMicrophoneUsageDescription:
     '<string>Send your microphone audio directly to your paired desktop.</string>',
   NSLocalNetworkUsageDescription:
@@ -96,50 +97,21 @@ for (const reference of Object.values(xcodeProject.pbxFileReferenceSection())) {
 await writeFile(project, xcodeProject.writeSync());
 const icons = path.join(root, 'ios/App/App/Assets.xcassets/AppIcon.appiconset');
 await mkdir(icons, { recursive: true });
-
-const { execSync } = await import('node:child_process');
-const sourceIcon = path.join(root, 'public/app-icon.png');
-
-async function generateIcon(filename, pxSize, scale, idiom = 'iphone', platform = 'ios') {
-  const outputPath = path.join(icons, filename);
-  const targetPx = scale === 3 ? Math.round(pxSize / 2) : pxSize;
-  try {
-    execSync(`sips -Z ${targetPx} "${sourceIcon}" --out "${outputPath}"`, { stdio: 'pipe' });
-    console.log(`Created ${filename}`);
-    return { filename, idiom, size: `${pxSize}x${pxSize}`, scale: `${scale}x`, platform };
-  } catch (e) {
-    console.error(`Failed to create ${filename}:`, e.message);
-    return null;
-  }
+for (const filename of await readdir(icons)) {
+  if (filename.endsWith('.png')) await rm(path.join(icons, filename));
 }
 
-const iconPresets = [
-  ['AppIcon-20.png', 20, 2], ['AppIcon-20.png', 20, 3],
-  ['AppIcon-29.png', 29, 2], ['AppIcon-29.png', 29, 3],
-  ['AppIcon-40.png', 40, 2], ['AppIcon-40.png', 40, 3],
-  ['AppIcon-60.png', 60, 2], ['AppIcon-60.png', 60, 3],
-  ['AppIcon-20.png', 20, 1, 'ipad'], ['AppIcon-20.png', 20, 2, 'ipad'],
-  ['AppIcon-29.png', 29, 1, 'ipad'], ['AppIcon-29.png', 29, 2, 'ipad'],
-  ['AppIcon-40.png', 40, 1, 'ipad'], ['AppIcon-40.png', 40, 2, 'ipad'],
-  ['AppIcon-80.png', 80, 2, 'ipad'],
-  ['AppIcon-1024.png', 1024, 1],
-];
-
-const images = [];
-for (const [filename, px, scale, idiom] of iconPresets) {
-  const result = await generateIcon(filename, px, scale, idiom || 'iphone');
-  if (result) images.push(result);
-}
-
-const marketingIcon = { filename: 'AppIcon-1024.png', idiom: 'ios-marketing', platform: 'ios', size: '1024x1024', role: 'marketing' };
-images.push(marketingIcon);
-
-const universalIcon = images.find(i => i.filename === 'AppIcon-1024.png');
-images.push(universalIcon);
-
+await copyFile(path.join(root, 'public/app-icon.png'), path.join(icons, 'AppIcon.png'));
 await writeFile(
   path.join(icons, 'Contents.json'),
-  JSON.stringify({ images, info: { author: 'xcode', version: 1 } }, null, 2)
+  JSON.stringify(
+    {
+      images: [{ filename: 'AppIcon.png', idiom: 'universal', platform: 'ios', size: '1024x1024' }],
+      info: { author: 'xcode', version: 1 },
+    },
+    null,
+    2,
+  ),
 );
 
 console.log('Xcode project ready: ios/App/App.xcodeproj');

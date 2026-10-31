@@ -24,6 +24,8 @@ The audio test runs the real exported frontend in a dedicated Electron window wi
 
 The synthetic test establishes software behavior. Actual microphone quality, hardware output routing, and perceived latency require this manual check.
 
-## Native checks later
+## Native device checks
 
 `npm run ios:sync` verifies generation and synchronization of the standard Xcode project. `npm run ios:build` additionally compiles it without signing. Neither validates microphone access, screen-lock endurance, interruption recovery, battery use, or Windows driver behavior. Test those separately on the intended devices after the Mac workflow is stable.
+
+On an actual iPhone: test QR permission allow/deny, invalid QR, scanner cancellation, successful pairing, repeated Connect taps, disconnect during startup, lock/unlock for at least 15 minutes, desktop restart, a Wi-Fi interruption, and another app taking microphone priority. Verify silence while muted after reconnect. These scenarios remain **NOT DEVICE-TESTED** until recorded with hardware results.

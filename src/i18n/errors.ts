@@ -1,6 +1,9 @@
 import { translate, type Locale, type MessageKey } from './index';
 
 const rules: [RegExp, MessageKey][] = [
+  [/camera.*(permission|denied|allow)/i, 'errorCamera'],
+  [/scanner|scanning/i, 'errorScanner'],
+  [/valid microphone audio/i, 'errorMicrophone'],
   [/clipboard/i, 'errorClipboard'],
   [/keychain|save.*pairing/i, 'errorKeychain'],
   [/pairing link.*invalid|invalid.*pairing link/i, 'errorPairing'],

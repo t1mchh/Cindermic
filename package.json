@@ -19,10 +19,7 @@
     "desktop": "npm run build && electron .",
     "dist:win": "npm run build && electron-builder --win nsis",
     "dist:win:zip": "npm run build && electron-builder --win zip --x64",
-    "dist:mac": "npm run build && electron-builder --mac dir",
-    "android:sync": "npm run build && npx cap sync android",
-    "android": "npm run build && npx cap open android",
-    "android:build": "npm run build && npx cap sync android && cd android && ./gradlew assembleDebug",
+    "dist:mac": "npm run build && node scripts/package-mac.mjs",
     "ios:sync": "npm run build && node scripts/ios.mjs sync",
     "ios": "npm run build && node scripts/ios.mjs open",
     "ios:build": "npm run ios:sync && xcodebuild -project ios/App/App.xcodeproj -scheme App -destination generic/platform=iOS CODE_SIGNING_ALLOWED=NO build"
@@ -35,10 +32,8 @@
     "ws": "8.22.0"
   },
   "devDependencies": {
-    "@capacitor/android": "^8.6.0",
     "@capacitor/cli": "^8.6.0",
     "@capacitor/ios": "^8.6.0",
-    "@fontsource/barlow-condensed": "^5.3.0",
     "@fontsource/dm-sans": "^5.3.0",
     "@fontsource/manrope": "^5.3.0",
     "@types/node": "^24.0.0",
@@ -60,18 +55,15 @@
     "productName": "Cindermic",
     "icon": "public/app-icon.png",
     "directories": {
-      "output": "cdist"
+      "output": "release"
     },
     "files": [
       "out/**/*",
       "desktop/**/*",
       "server/**/*",
       "shared/**/*",
-      "package.json",
-      "capacitor.config.ts",
-      "scripts/**/*",
-      "native/**/*",
-      "node_resources/**/*"
+      "public/app-icon.png",
+      "package.json"
     ],
     "win": {
       "target": [
@@ -92,8 +84,14 @@
       "category": "public.app-category.utilities",
       "extendInfo": {
         "NSMicrophoneUsageDescription": "Use your microphone to test audio capture in Cindermic."
-      }
-    }
+      },
+      "identity": "-"
+    },
+    "electronLanguages": [
+      "en",
+      "de",
+      "ru"
+    ]
   },
   "engines": {
     "node": ">=24"

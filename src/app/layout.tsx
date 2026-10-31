@@ -6,14 +6,12 @@ import '@fontsource/manrope/500.css';
 import '@fontsource/manrope/600.css';
 import '@fontsource/manrope/700.css';
 import '@fontsource/manrope/800.css';
-import '@fontsource/barlow-condensed/800-italic.css';
-import '@fontsource/barlow-condensed/700.css';
 import '@/styles/globals.css';
 import { LanguageProvider } from '@/i18n/provider';
 
 export const metadata: Metadata = {
-  title: 'Cindermic — Your phone. Your voice.',
-  icons: { icon: '/icon.svg' },
+  title: 'Cindermic',
+  icons: { icon: '/favicon.png', apple: '/apple-touch-icon.png' },
   description: 'A personal, local-first microphone for your desktop.',
 };
 export const viewport: Viewport = {

@@ -34,4 +34,6 @@ The phone receiver accepts TLS connections on local interfaces. A pairing link c
 
 Capacitor generates `ios/` from `capacitor.config.ts`, `out/`, and the local `@cindermic/audio` package. The plugin is a normal Swift package and is discovered by `cap sync`; there is no custom WebKit file server or handwritten Xcode project.
 
-The native plugin exposes one typed command API and publishes state events. Pairing uses a pasted link, so Connect never starts a custom camera scanner. The iOS command does not deploy to a phone automatically.
+The native plugin exposes one typed command API and publishes state events. Pairing uses Apple VisionKit for native QR scanning, with a pasted-link fallback. The camera is stopped and dismissed on success, invalid input, cancellation, or scanner failure. [Apple scanner delegate reference](https://developer.apple.com/documentation/visionkit/datascannerviewcontrollerdelegate). The iOS command does not deploy to a phone automatically.
+
+Native capture starts and stops on its own serial queue. Captured packets are delivered through a bounded queue to the main-thread controller, which owns connection state, timers, mute, and socket references. The receiver publishes Connected only after receiving a valid audio frame. Authentication alone means Connecting. iOS and browser handshakes have deadlines; retry delay is bounded at 15 seconds. A changed phone network retries the saved pinned endpoint; a changed desktop IP requires scanning/copying its updated pairing link.

@@ -8,14 +8,17 @@ struct Pairing: Codable {
     let fingerprint: String
 
     init(link: String) throws {
-        guard let url = URLComponents(string: link), url.scheme == "cindermic", url.host == "pair"
+        guard link.count <= 2048, let url = URLComponents(string: link.trimmingCharacters(in: .whitespacesAndNewlines)), url.scheme == "cindermic", url.host == "pair",
+            url.user == nil, url.password == nil, url.port == nil, url.path.isEmpty, url.fragment == nil,
+            ["host", "port", "token", "fingerprint"].allSatisfy({ key in (url.queryItems ?? []).filter { $0.name == key }.count == 1 })
         else {
             throw PairingError.invalid
         }
         let items = Dictionary(
             (url.queryItems ?? []).map { ($0.name, $0.value ?? "") },
             uniquingKeysWith: { _, last in last })
-        guard let host = items["host"], !host.isEmpty, !host.contains("/"), !host.contains("@"),
+        guard let host = items["host"], host.count <= 253, !host.contains(".."),
+            host.range(of: "^[A-Za-z0-9](?:[A-Za-z0-9.-]*[A-Za-z0-9])?$", options: .regularExpression) != nil,
             let port = Int(items["port"] ?? ""), (1...65535).contains(port),
             let token = items["token"],
             token.range(of: "^[a-f0-9]{64}$", options: .regularExpression) != nil,
@@ -53,11 +56,14 @@ enum PairingStore {
     ]
     static func save(_ pairing: Pairing) throws {
         let data = try JSONEncoder().encode(pairing)
-        SecItemDelete(query as CFDictionary)
-        var insert = query
-        insert[kSecValueData as String] = data
-        insert[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
-        let status = SecItemAdd(insert as CFDictionary, nil)
+        let attributes: [String: Any] = [
+            kSecValueData as String: data,
+            kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
+        ]
+        var status = SecItemUpdate(query as CFDictionary, attributes as CFDictionary)
+        if status == errSecItemNotFound {
+            status = SecItemAdd(query.merging(attributes) { _, new in new } as CFDictionary, nil)
+        }
         guard status == errSecSuccess else {
             throw NSError(
                 domain: NSOSStatusErrorDomain, code: Int(status),

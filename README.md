@@ -37,9 +37,7 @@ The language selector supports English, German, and Russian. Your choice and the
 | `npm run ios`          | Build, sync the iOS project, and open Xcode                 |
 | `npm run ios:sync`     | Build and sync the iOS project without opening Xcode        |
 | `npm run ios:build`    | Generate and compile the iOS project without signing        |
-| `npm run android`      | Sync and open the Android project in Android Studio         |
-| `npm run android:build`| Build a debug APK                                            |
-| `npm run dist:mac`     | Package the Mac desktop app                                 |
+| `npm run dist:mac`     | Package the Mac desktop app as a ZIP                        |
 | `npm run dist:win`     | Build a Windows installer on Windows                        |
 | `npm run dist:win:zip` | Build a portable Windows ZIP                                |
 
@@ -77,33 +75,17 @@ npm run ios
 
 This exports the same Next.js interface, creates a standard Capacitor iOS project if necessary, syncs the local Swift audio plugin, and opens Xcode. Choose **App → Signing & Capabilities → Team**, select your connected iPhone as the run destination, and press **Run**. The project requires iOS 17 or newer. For a compile check without signing or installing, run `npm run ios:build`.
 
-Make interface changes in `src/`, native audio changes in `native/audio/`, then run `npm run ios` again. The generated `ios/` project is not the source of truth. The sync script adds microphone, local-network, and background-audio settings without installing or launching the app on a device.
+Make interface changes in `src/`, native audio changes in `native/audio/`, then run `npm run ios` again. The generated `ios/` project is not the source of truth. The sync script adds camera, microphone, local-network, and background-audio settings without installing or launching the app on a device.
 
-**Important for mobile builds:** The iOS icon generation and app build require running outside macOS sandbox (the `sips` command is blocked in sandbox). To build iOS apps, run from Terminal outside Claude Code's sandbox:
-```sh
-# First, install Android support (for both platforms)
-npm install @capacitor/android
+On the iPhone, tap **Scan QR code**, allow camera access, and scan the desktop code. Manual connection accepts the complete pairing link copied from the desktop. The link supplies the address, sender token, and pinned certificate; a bare IP address is insufficient. Pairing links have no built-in expiry. Keep them private.
 
-# Generate iOS icons (requires sips access)
-node scripts/generate-ios-icons.mjs
-
-# Or use the main setup script
-node scripts/ios.mjs open
-```
-
-### Android setup (optional)
-To build Android apps, first install the Android platform:
-```sh
-npm install @capacitor/android
-npm run android:sync
-```
-Then open Android Studio with `npm run android` and build from there.
-
-iOS uses a pasted desktop pairing link for now. The QR code is also displayed for a future camera-scanning flow. Native microphone capture, locked-screen behavior, and interruption recovery still require device validation; generating an Xcode project does not validate them. iOS may interrupt capture when another app records audio.
+The scanner uses Apple VisionKit on supported iPhones, with a manual fallback when camera access is denied or scanning is unavailable. Camera scanning, native microphone capture, locked-screen behavior, network roaming, and interruption recovery are **NOT DEVICE-TESTED**. iOS may interrupt capture when another app records audio. Android, Bluetooth, Wi-Fi Direct, and USB are not supported.
 
 ## Other applications
 
 To appear as a microphone in Discord, OBS, or games, route Cindermic into a separately installed virtual audio device. The application does not install a system driver. On Windows with VB-CABLE, play to **CABLE Input** and select **CABLE Output** as the microphone in the target app.
+
+Mac packaging signs a temporary build outside synced Documents folders and writes `release/Cindermic-mac-arm64.zip` (or `x64`). It uses an ad-hoc signature for personal use; the archive is not notarized for public distribution.
 
 ## Connection scope
 

@@ -1,2 +1,4 @@
 "NSMicrophoneUsageDescription" = "Übertrage dein Mikrofon direkt an deinen gekoppelten Computer.";
 "NSLocalNetworkUsageDescription" = "Verbinde dich im lokalen Netzwerk mit deinem Cindermic-Computer.";
+"NSCameraUsageDescription" = "Scanne den QR-Code in deiner Cindermic-Desktop-App.";
+"scanner.title" = "Desktop-QR-Code scannen";

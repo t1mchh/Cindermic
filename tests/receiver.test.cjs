@@ -61,10 +61,11 @@ test('TLS pairing and authenticated PCM forwarding work together', async (t) => 
   assert.equal(link.searchParams.get('fingerprint').length, 64);
   const { ws, welcome } = await connect(instance);
   assert.equal(welcome.type, 'welcome');
-  assert.equal(instance.snapshot().status, 'connected');
+  assert.equal(instance.snapshot().status, 'connecting');
   const received = once(instance, 'audio');
   ws.send(packet());
   assert.deepEqual((await received)[0], packet());
+  assert.equal(instance.snapshot().status, 'connected');
 });
 test('mute suppresses audio and survives reconnect', async (t) => {
   const instance = await receiver(t);
@@ -109,7 +110,8 @@ test('replacing a session does not let old close events disconnect the new phone
   const instance = await receiver(t);
   const first = await connect(instance);
   const closed = once(first.ws, 'close');
-  await connect(instance);
+  const second = await connect(instance);
+  second.ws.send(packet());
   await closed;
   await tick();
   assert.equal(instance.snapshot().status, 'connected');
@@ -121,4 +123,31 @@ test('desktop disconnect tells phone to stop retries', async (t) => {
   instance.disconnect();
   const [raw] = await message;
   assert.equal(JSON.parse(raw).type, 'disconnect');
+});
+
+test('authenticated senders cannot claim Connected without valid audio and time out cleanly', async (t) => {
+  const instance = new Receiver({ ...identity, port: 0, host: '127.0.0.1', pipelineTimeout: 80 });
+  await instance.start();
+  t.after(() => instance.close());
+  const { ws } = await connect(instance);
+  const closed = once(ws, 'close');
+  ws.send(JSON.stringify({ type: 'status', status: 'connected' }));
+  await tick();
+  assert.equal(instance.snapshot().status, 'connecting');
+  assert.equal((await closed)[0], 4003);
+  await tick();
+  assert.equal(instance.snapshot().status, 'failed');
+});
+
+test('receiver shutdown closes clients that never complete a TLS handshake', async () => {
+  const net = require('node:net');
+  const instance = new Receiver({ ...identity, port: 0, host: '127.0.0.1' });
+  await instance.start();
+  const socket = net.connect(instance.port, '127.0.0.1');
+  await once(socket, 'connect');
+  const closed = new Promise((resolve) => socket.once('close', resolve));
+  socket.on('error', (error) => assert.equal(error.code, 'ECONNRESET'));
+  await instance.close();
+  await closed;
+  assert.equal(instance.connections.size, 0);
 });

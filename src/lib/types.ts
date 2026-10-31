@@ -1,4 +1,5 @@
-export type MicStatus = 'offline' | 'connecting' | 'connected' | 'reconnecting' | 'interrupted';
+export type MicStatus =
+  'offline' | 'connecting' | 'connected' | 'reconnecting' | 'interrupted' | 'failed';
 
 export interface AppState {
   status: MicStatus;
@@ -12,8 +13,8 @@ export interface AppState {
   frames?: number;
   addresses?: string[];
   port?: number;
-  pairing?: string;
-  qr?: string;
+  pairing?: string | null;
+  qr?: string | null;
 }
 
 export type Command =
@@ -29,6 +30,7 @@ export interface Bridge {
   onState(listener: (state: Partial<AppState>) => void): () => void;
   onAudio(listener: (data: Uint8Array) => void): () => void;
   onPairingRequired(listener: () => void): () => void;
+  scanPairing?(): Promise<{ link?: string; cancelled?: boolean }>;
   getSession(): Promise<{ token: string; captureToken: string; url: string }>;
 }
 

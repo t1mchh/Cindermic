@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
+import { parsePairing } from '../../shared/pairing.mjs';
 import { readLevel } from '../../shared/protocol.mjs';
 import { AudioReceiver } from '@/lib/audio-receiver';
 import { BrowserSender, type SenderStatus } from '@/lib/browser-sender';
@@ -13,6 +14,9 @@ const initialState: AppState = { status: 'offline', muted: false, backendConnect
 
 export function useCindermic() {
   const [state, setState] = useState(initialState);
+  const [native, setNative] = useState(false);
+  const [scanning, setScanning] = useState(false);
+  const scanBusy = useRef(false);
   const [phone, setPhone] = useState(false);
   const [pairingOpen, setPairingOpen] = useState(false);
   const [notice, setNotice] = useState('');
@@ -26,6 +30,8 @@ export function useCindermic() {
   const bridge = useRef<Bridge | null>(null);
   const audio = useRef<AudioReceiver | null>(null);
   const sender = useRef<BrowserSender | null>(null);
+  const outputBusy = useRef(false);
+  const outputGeneration = useRef(0);
   const currentState = useRef(state);
   const lastMeter = useRef(0);
   const connected = ['connected', 'interrupted'].includes(state.status);
@@ -45,6 +51,7 @@ export function useCindermic() {
     bridge.current = connection;
     audio.current = receiver;
     sender.current = capture;
+    setNative(native);
     setPhone(native || new URLSearchParams(location.search).get('view') === 'phone');
     capture.onStatus = (status, error) => {
       if (!disposed) {
@@ -100,6 +107,10 @@ export function useCindermic() {
 
   async function command(value: Command) {
     try {
+      if (value.type === 'pair') {
+        setNotice('');
+        parsePairing(value.link);
+      }
       const result = await bridge.current?.command(value);
       if (result) setState((previous) => ({ ...previous, ...result }));
     } catch (error) {
@@ -108,11 +119,30 @@ export function useCindermic() {
   }
 
   async function mainAction() {
+    setNotice('');
     if (connected) return command({ type: 'mute', muted: !state.muted });
     if (Capacitor.isNativePlatform())
-      return command({ type: state.status === 'offline' ? 'connect' : 'disconnect' });
+      return command({
+        type: ['offline', 'failed'].includes(state.status) ? 'connect' : 'disconnect',
+      });
     if (senderStatus !== 'idle') await sender.current?.stop();
     else await sender.current?.start();
+  }
+
+  async function scanPairing() {
+    if (scanBusy.current || !bridge.current?.scanPairing) return;
+    scanBusy.current = true;
+    setNotice('');
+    setScanning(true);
+    try {
+      const result = await bridge.current.scanPairing();
+      if (result.link) await command({ type: 'pair', link: result.link });
+    } catch (error) {
+      showError(error);
+    } finally {
+      scanBusy.current = false;
+      setScanning(false);
+    }
   }
 
   async function disconnect() {
@@ -138,6 +168,9 @@ export function useCindermic() {
   }
 
   async function toggleRouting() {
+    if (outputBusy.current) return;
+    outputBusy.current = true;
+    const generation = ++outputGeneration.current;
     try {
       if (routing) {
         await audio.current?.stop();
@@ -146,16 +179,20 @@ export function useCindermic() {
       }
       if (!deviceId) throw new Error('Choose an output device first.');
       await audio.current?.start(deviceId === 'default' ? '' : deviceId);
+      if (generation !== outputGeneration.current) return;
       audio.current?.setGain(gain / 100);
       audio.current?.mute(!live);
       setRouting(true);
     } catch (error) {
       setRouting(false);
-      showError(error);
+      if (generation === outputGeneration.current) showError(error);
+    } finally {
+      outputBusy.current = false;
     }
   }
 
   function selectDevice(value: string) {
+    outputGeneration.current++;
     setDeviceId(value);
     void audio.current?.stop();
     setRouting(false);
@@ -177,6 +214,9 @@ export function useCindermic() {
   return {
     state,
     phone,
+    native,
+    scanning,
+    scanPairing,
     connected,
     live,
     level,

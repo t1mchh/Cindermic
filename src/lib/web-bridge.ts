@@ -7,11 +7,17 @@ export function backendUrl() {
 }
 
 export class WebBridge implements Bridge {
+  constructor(
+    private connectTimeout = 7000,
+    private commandTimeout = 5000,
+  ) {}
   private socket?: WebSocket;
   private stopped = true;
   private retry = 0;
   private timer?: ReturnType<typeof setTimeout>;
   private sequence = 0;
+  private generation = 0;
+  private handshake?: ReturnType<typeof setTimeout>;
   private states = new Set<(state: Partial<AppState>) => void>();
   private audio = new Set<(data: Uint8Array) => void>();
   private pending = new Map<
@@ -56,25 +62,36 @@ export class WebBridge implements Bridge {
 
   async connect() {
     this.stopped = false;
+    const generation = ++this.generation;
     try {
       const session = await this.getSession();
-      if (this.stopped) return;
+      if (this.stopped || generation !== this.generation) return;
       const url = new URL('/control', session.url);
       url.protocol = 'ws:';
       url.searchParams.set('session', session.token);
       const socket = new WebSocket(url);
       this.socket = socket;
       socket.binaryType = 'arraybuffer';
-      socket.onopen = () => {
-        this.retry = 0;
-      };
+      this.handshake = setTimeout(() => socket.close(), this.connectTimeout);
       socket.onmessage = (event) => {
+        if (this.stopped || this.socket !== socket) return;
         if (event.data instanceof ArrayBuffer) {
           for (const listener of this.audio) listener(new Uint8Array(event.data));
           return;
         }
-        const message = JSON.parse(event.data);
-        if (message.state) this.publish(message.state);
+        let message;
+        try {
+          message = JSON.parse(event.data);
+        } catch {
+          socket.close(4003);
+          return;
+        }
+        if (!message || typeof message !== 'object') return;
+        if (message.state) {
+          clearTimeout(this.handshake);
+          this.retry = 0;
+          this.publish(message.state);
+        }
         const pending = this.pending.get(message.id);
         if (pending) {
           clearTimeout(pending.timer);
@@ -85,17 +102,22 @@ export class WebBridge implements Bridge {
       };
       socket.onclose = () => {
         if (this.socket !== socket) return;
+        clearTimeout(this.handshake);
         this.rejectPending();
         this.scheduleRetry();
       };
       socket.onerror = () => socket.close();
     } catch {
-      this.scheduleRetry();
+      if (generation === this.generation) this.scheduleRetry();
     }
   }
 
   private scheduleRetry() {
-    this.publish({ backendConnected: false, status: 'offline' });
+    this.publish({
+      backendConnected: false,
+      status: 'offline',
+      error: this.retry >= 2 ? 'Cindermic stopped responding. Reopen the desktop app.' : '',
+    });
     if (this.stopped) return;
     clearTimeout(this.timer);
     this.timer = setTimeout(() => void this.connect(), reconnectDelay(++this.retry));
@@ -110,7 +132,7 @@ export class WebBridge implements Bridge {
       const timer = setTimeout(() => {
         this.pending.delete(id);
         reject(new Error('Your connection isn’t responding. Try again.'));
-      }, 5000);
+      }, this.commandTimeout);
       this.pending.set(id, { resolve, reject, timer });
       socket.send(JSON.stringify({ id, command }));
     });
@@ -126,7 +148,9 @@ export class WebBridge implements Bridge {
 
   close() {
     this.stopped = true;
+    this.generation++;
     clearTimeout(this.timer);
+    clearTimeout(this.handshake);
     const socket = this.socket;
     this.socket = undefined;
     socket?.close();

@@ -1,2 +1,4 @@
 "NSMicrophoneUsageDescription" = "Передавайте звук с микрофона напрямую на подключённый компьютер.";
 "NSLocalNetworkUsageDescription" = "Подключайтесь к Cindermic на компьютере через локальную сеть.";
+"NSCameraUsageDescription" = "Сканируйте QR-код в Cindermic на компьютере.";
+"scanner.title" = "Сканировать QR-код";

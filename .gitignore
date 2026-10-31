@@ -13,3 +13,6 @@ release/
 **/xcuserdata/
 **/*.xcuserstate
 work/
+
+cdist/
+/android/

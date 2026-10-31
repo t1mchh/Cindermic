@@ -1,6 +1,6 @@
 const http = require('node:http');
 const path = require('node:path');
-const { readFile, writeFile } = require('node:fs/promises');
+const { readFile, writeFile, rename } = require('node:fs/promises');
 const { randomBytes } = require('node:crypto');
 const { WebSocketServer, WebSocket } = require('ws');
 const QRCode = require('qrcode');
@@ -35,6 +35,7 @@ async function createBackend(options = {}) {
     muted,
     port: options.audioPort ?? 43129,
     host: options.audioHost || '0.0.0.0',
+    pipelineTimeout: options.pipelineTimeout,
   });
   const controls = new WebSocketServer({
     noServer: true,
@@ -54,7 +55,9 @@ async function createBackend(options = {}) {
 
   async function snapshot() {
     const state = receiver.snapshot();
-    if (!state.addresses.includes(selectedHost)) selectedHost = state.addresses[0] || '127.0.0.1';
+    if (!state.addresses.length)
+      return { ...state, pairing: null, qr: null, backendConnected: true };
+    if (!state.addresses.includes(selectedHost)) selectedHost = state.addresses[0];
     const pairing = receiver.pairing(selectedHost);
     if (pairingCache?.pairing !== pairing)
       pairingCache = { pairing, qr: await QRCode.toDataURL(pairing, { width: 256, margin: 1 }) };
@@ -113,7 +116,11 @@ async function createBackend(options = {}) {
       savedMute = state.muted;
       const settings = JSON.stringify({ muted: savedMute });
       persist = persist
-        .then(() => writeFile(path.join(storage, 'settings.json'), settings, { mode: 0o600 }))
+        .then(async () => {
+          const temporary = path.join(storage, 'settings.json.tmp');
+          await writeFile(temporary, settings, { mode: 0o600 });
+          await rename(temporary, path.join(storage, 'settings.json'));
+        })
         .catch((error) => console.error('Could not save settings:', error.message));
     }
   });
@@ -217,6 +224,18 @@ async function createBackend(options = {}) {
   origins.add(url);
   origins.add(`http://localhost:${server.address().port}`);
   server.on('error', (error) => console.error('Local server error:', error.message));
+  let addressSignature = JSON.stringify(receiver.snapshot().addresses);
+  const networkTimer = setInterval(() => {
+    const next = JSON.stringify(receiver.snapshot().addresses);
+    if (next === addressSignature) return;
+    addressSignature = next;
+    void snapshot()
+      .then((state) => {
+        for (const socket of controls.clients) send(socket, { type: 'state', state });
+      })
+      .catch((error) => console.error('Could not refresh pairing:', error.message));
+  }, 3000);
+  networkTimer.unref();
 
   return {
     url,
@@ -224,6 +243,7 @@ async function createBackend(options = {}) {
     snapshot,
     command,
     async close() {
+      clearInterval(networkTimer);
       for (const socket of controls.clients) socket.terminate();
       for (const socket of senders.clients) socket.terminate();
       await Promise.all([

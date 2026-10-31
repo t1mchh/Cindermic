@@ -33,12 +33,15 @@ class Receiver extends EventEmitter {
     muted = false,
     port = 43129,
     host = '0.0.0.0',
+    pipelineTimeout = 7000,
   }) {
     super();
     this.token = token;
     this.port = port;
     this.host = host;
+    this.pipelineTimeout = pipelineTimeout;
     this.clients = new Set();
+    this.connections = new Set();
     this.fingerprint = new X509Certificate(cert).fingerprint256.replaceAll(':', '').toLowerCase();
     this.state = {
       status: 'offline',
@@ -51,6 +54,11 @@ class Receiver extends EventEmitter {
     this.server = https.createServer({ key, cert, minVersion: 'TLSv1.2' }, (req, res) => {
       res.writeHead(200, { 'Content-Type': 'text/plain', 'Cache-Control': 'no-store' });
       res.end('Cindermic receiver. Pair from the desktop app.');
+    });
+    this.server.maxConnections = 32;
+    this.server.on('connection', (socket) => {
+      this.connections.add(socket);
+      socket.once('close', () => this.connections.delete(socket));
     });
     this.wss = new WebSocketServer({
       server: this.server,
@@ -102,6 +110,7 @@ class Receiver extends EventEmitter {
     ws.on('pong', () => {
       ws.alive = true;
     });
+    let pipelineTimer;
     const authTimer = setTimeout(() => ws.close(4001, 'Pairing required'), 5000);
     authTimer.unref();
     ws.on('error', () => {});
@@ -123,12 +132,14 @@ class Receiver extends EventEmitter {
         ws.authenticated = true;
         clearTimeout(authTimer);
         this.update({
-          status: 'connected',
+          status: 'connecting',
           name: String(message.name || 'iPhone').slice(0, 80),
           frames: 0,
           error: '',
           battery: undefined,
         });
+        pipelineTimer = setTimeout(() => ws.close(4003, 'No audio received'), this.pipelineTimeout);
+        pipelineTimer.unref();
         ws.send(JSON.stringify({ type: 'welcome', muted: this.state.muted, sampleRate: 48000 }));
         return;
       }
@@ -136,7 +147,9 @@ class Receiver extends EventEmitter {
       ws.alive = true;
       if (binary) {
         if (!validPacket(raw)) return ws.close(4003, 'Invalid audio packet');
+        clearTimeout(pipelineTimer);
         this.state.frames++;
+        if (this.state.status === 'connecting') this.update({ status: 'connected' });
         if (this.state.status !== 'interrupted' && !this.state.muted) this.emit('audio', raw);
         if (this.state.frames % 25 === 0) this.emit('state', this.snapshot());
         return;
@@ -152,19 +165,29 @@ class Receiver extends EventEmitter {
         this.setMuted(message.muted);
       if (message.type === 'status') {
         const patch = {};
-        if (['connected', 'interrupted'].includes(message.status)) patch.status = message.status;
+        if (
+          message.status === 'interrupted' ||
+          (message.status === 'connected' && this.state.frames > 0)
+        )
+          patch.status = message.status;
         if (typeof message.battery === 'number' && message.battery >= 0 && message.battery <= 1)
           patch.battery = message.battery;
         this.update(patch);
       }
       if (message.type === 'disconnect') ws.close(1000, 'Disconnected by phone');
     });
-    ws.on('close', () => {
+    ws.on('close', (code) => {
       this.clients.delete(ws);
       clearTimeout(authTimer);
+      clearTimeout(pipelineTimer);
       if (this.peer !== ws) return;
       this.peer = undefined;
-      this.update({ status: 'offline', battery: undefined });
+      this.update({
+        status: code === 4003 ? 'failed' : 'offline',
+        battery: undefined,
+        name: undefined,
+        error: code === 4003 ? 'No valid microphone audio received. Reconnect your device.' : '',
+      });
     });
   }
   setMuted(muted) {
@@ -181,6 +204,7 @@ class Receiver extends EventEmitter {
   async close() {
     clearInterval(this.timer);
     for (const ws of this.clients) ws.terminate();
+    for (const socket of this.connections) socket.destroy();
     await new Promise((resolve) => this.wss.close(resolve));
     if (this.server.listening) await new Promise((resolve) => this.server.close(resolve));
   }

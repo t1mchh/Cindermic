@@ -8,9 +8,12 @@ export class AudioReceiver {
   private compressor?: DynamicsCompressorNode;
   private isMuted = false;
   private volume = 1;
+  private generation = 0;
 
   async start(deviceId: string) {
-    await this.stop();
+    const generation = ++this.generation;
+    await this.cleanup();
+    if (generation !== this.generation) return;
     const context = new AudioContext({
       latencyHint: 'interactive',
       sampleRate: 48000,
@@ -20,6 +23,7 @@ export class AudioReceiver {
       if (context.setSinkId) await context.setSinkId(deviceId);
       else if (deviceId) throw new Error('This runtime cannot select an audio output.');
       await context.audioWorklet.addModule('/pcm-worklet.js');
+      if (generation !== this.generation) return;
       this.node = new AudioWorkletNode(context, 'cindermic-pcm', { outputChannelCount: [1] });
       this.highpass = context.createBiquadFilter();
       this.highpass.type = 'highpass';
@@ -38,7 +42,7 @@ export class AudioReceiver {
         .connect(context.destination);
       await context.resume();
     } catch (error) {
-      await this.stop();
+      if (generation === this.generation) await this.stop();
       throw error;
     }
   }
@@ -61,8 +65,18 @@ export class AudioReceiver {
     this.node?.port.postMessage({ type: 'flush' });
   }
   async stop() {
+    this.generation++;
+    await this.cleanup();
+  }
+  private async cleanup() {
     this.node?.disconnect();
     this.node = undefined;
+    this.highpass?.disconnect();
+    this.highpass = undefined;
+    this.gain?.disconnect();
+    this.gain = undefined;
+    this.compressor?.disconnect();
+    this.compressor = undefined;
     const context = this.context;
     this.context = undefined;
     if (context && context.state !== 'closed') await context.close();

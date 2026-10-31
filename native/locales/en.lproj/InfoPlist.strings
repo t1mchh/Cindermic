@@ -1,2 +1,4 @@
 "NSMicrophoneUsageDescription" = "Send your microphone audio directly to your paired desktop.";
 "NSLocalNetworkUsageDescription" = "Connect to your Cindermic desktop on your local network.";
+"NSCameraUsageDescription" = "Scan the QR code shown by your Cindermic desktop.";
+"scanner.title" = "Scan desktop QR code";

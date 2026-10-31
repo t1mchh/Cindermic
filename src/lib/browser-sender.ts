@@ -17,7 +17,10 @@ export class BrowserSender {
   private timer?: ReturnType<typeof setTimeout>;
   private handshake?: ReturnType<typeof setTimeout>;
 
-  constructor(private bridge: Bridge) {}
+  constructor(
+    private bridge: Bridge,
+    private connectTimeout = 7000,
+  ) {}
 
   async start() {
     if (this.wanted) return;
@@ -86,8 +89,12 @@ export class BrowserSender {
       url.searchParams.set('session', session.token);
       const socket = new WebSocket(url);
       this.socket = socket;
-      this.handshake = setTimeout(() => socket.close(), 7000);
-      socket.onopen = () =>
+      this.handshake = setTimeout(() => socket.close(), this.connectTimeout);
+      socket.onopen = () => {
+        if (!this.wanted || generation !== this.generation) {
+          socket.close();
+          return;
+        }
         socket.send(
           JSON.stringify({
             type: 'hello',
@@ -95,8 +102,17 @@ export class BrowserSender {
             token: session.captureToken,
           }),
         );
+      };
       socket.onmessage = ({ data }) => {
-        const message = JSON.parse(data);
+        if (this.socket !== socket || generation !== this.generation) return;
+        let message;
+        try {
+          message = JSON.parse(data);
+        } catch {
+          socket.close(4003);
+          return;
+        }
+        if (!message || typeof message !== 'object') return;
         if (message.type === 'welcome') {
           clearTimeout(this.handshake);
           this.authenticated = true;
@@ -153,11 +169,15 @@ export class BrowserSender {
       track.stop();
     });
     this.stream = undefined;
-    this.node?.disconnect();
+    if (this.node) {
+      this.node.port.onmessage = null;
+      this.node.port.close();
+      this.node.disconnect();
+    }
     this.node = undefined;
     const context = this.context;
     this.context = undefined;
-    if (context && context.state !== 'closed') await context.close();
     this.onStatus?.('idle');
+    if (context && context.state !== 'closed') await context.close();
   }
 }

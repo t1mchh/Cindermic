@@ -12,7 +12,10 @@ final class MicController: NSObject, URLSessionWebSocketDelegate {
     private var retryTimer: Timer?
     private var heartbeat: Timer?
     private var handshakeTimer: Timer?
+    private var captureTimer: Timer?
+    private var captureStarting = false
     private var wanted = false
+    private let connectionTimeout: TimeInterval
     private var authenticated = false
     private var interrupted = false
     private var pendingMute: Bool?
@@ -26,7 +29,9 @@ final class MicController: NSObject, URLSessionWebSocketDelegate {
     private var status = "offline"
     private var muted = UserDefaults.standard.bool(forKey: "muted")
 
-    override init() {
+    override convenience init() { self.init(connectionTimeout: 10) }
+    init(connectionTimeout: TimeInterval) {
+        self.connectionTimeout = max(1, connectionTimeout)
         super.init()
         UIDevice.current.isBatteryMonitoringEnabled = true
         capture.onSamples = { [weak self] data, level in self?.samples(data, level: level) }
@@ -93,7 +98,7 @@ final class MicController: NSObject, URLSessionWebSocketDelegate {
                 guard let self, self.wanted, self.connectionGeneration == generation else { return }
                 guard allowed else {
                     self.wanted = false
-                    self.status = "offline"
+                    self.status = "failed"
                     self.errorText = "Allow microphone access in Settings → Cindermic."
                     self.emit()
                     return
@@ -101,15 +106,21 @@ final class MicController: NSObject, URLSessionWebSocketDelegate {
                 self.wanted = true
                 self.retry = 0
                 self.interrupted = false
-                do { try self.capture.start() } catch {
-                    self.capture.deactivate()
-                    self.errorText = error.localizedDescription
-                    self.wanted = false
-                    self.status = "offline"
-                    self.emit()
-                    return
+                self.captureStarting = true
+                self.armCaptureTimeout(generation: generation)
+                self.capture.start { [weak self] error in
+                    guard let self, self.wanted, self.connectionGeneration == generation else { return }
+                    self.captureStarting = false
+                    self.captureTimer?.invalidate()
+                    if let error {
+                        self.errorText = error.localizedDescription
+                        self.wanted = false
+                        self.status = "failed"
+                        self.emit()
+                        return
+                    }
+                    self.openSocket()
                 }
-                self.openSocket()
             }
         }
     }
@@ -122,7 +133,7 @@ final class MicController: NSObject, URLSessionWebSocketDelegate {
         emit()
         let config = URLSessionConfiguration.ephemeral
         config.waitsForConnectivity = false
-        config.timeoutIntervalForRequest = 10
+        config.timeoutIntervalForRequest = connectionTimeout
         config.timeoutIntervalForResource = 0
         config.urlCache = nil
         let session = URLSession(configuration: config, delegate: self, delegateQueue: .main)
@@ -133,7 +144,7 @@ final class MicController: NSObject, URLSessionWebSocketDelegate {
         lastPong = Date()
         task.resume()
         receive(task)
-        handshakeTimer = Timer.scheduledTimer(withTimeInterval: 10, repeats: false) {
+        handshakeTimer = Timer.scheduledTimer(withTimeInterval: connectionTimeout, repeats: false) {
             [weak self, weak task] _ in
             guard let task else { return }
             self?.failed(
@@ -160,6 +171,9 @@ final class MicController: NSObject, URLSessionWebSocketDelegate {
         retryTimer = nil
         if authenticated { send(["type": "disconnect"]) }
         closeSocket()
+        captureStarting = false
+        captureTimer?.invalidate()
+        captureTimer = nil
         capture.deactivate()
         interrupted = false
         status = "offline"
@@ -198,8 +212,9 @@ final class MicController: NSObject, URLSessionWebSocketDelegate {
                 guard let self, let task, self.socket === task else { return }
                 switch result {
                 case .failure(let error):
-                    if task.closeCode.rawValue == 4001 || task.closeCode.rawValue == 4002 {
+                    if [4001, 4002, 4003].contains(task.closeCode.rawValue) {
                         self.disconnect()
+                        self.status = "failed"
                         self.errorText =
                             "Pairing was rejected or replaced. Scan the desktop QR to pair again."
                         self.emit()
@@ -287,12 +302,10 @@ final class MicController: NSObject, URLSessionWebSocketDelegate {
             emit(level: muted ? 0 : level)
         }
         guard authenticated, let socket, inflight < 3 else { return }
-        var packet = Data(capacity: 12)
-        var magic: UInt32 = 0x434e4431
-        withUnsafeBytes(of: &magic) { packet.append(contentsOf: $0) }
+        var packet = Data([0x43, 0x4e, 0x44, 0x31])
         var seq = sequence.littleEndian
         sequence &+= 1
-        var rate: UInt32 = 48000
+        var rate = UInt32(48000).littleEndian
         withUnsafeBytes(of: &seq) { packet.append(contentsOf: $0) }
         withUnsafeBytes(of: &rate) { packet.append(contentsOf: $0) }
         packet.append(muted ? Data(repeating: 0, count: pcm.count) : pcm)
@@ -311,6 +324,8 @@ final class MicController: NSObject, URLSessionWebSocketDelegate {
         else { return }
         if type == .began {
             interrupted = true
+            captureStarting = false
+            captureTimer?.invalidate()
             capture.stop()
             status = authenticated ? "interrupted" : status
             emit()
@@ -326,30 +341,41 @@ final class MicController: NSObject, URLSessionWebSocketDelegate {
             }
         }
     }
+    private func armCaptureTimeout(generation: UInt64) {
+        captureTimer?.invalidate()
+        captureTimer = Timer.scheduledTimer(withTimeInterval: connectionTimeout, repeats: false) { [weak self] _ in
+            guard let self, self.wanted, self.captureStarting, self.connectionGeneration == generation else { return }
+            self.disconnect()
+            self.status = "failed"
+            self.errorText = "Microphone startup timed out. Try connecting again."
+            self.emit()
+        }
+    }
     private func recoverCapture() {
-        guard wanted else { return }
-        do {
-            try capture.start()
-            interrupted = false
-            errorText = ""
-            if authenticated { status = "connected" }
-            emit()
-            sendStatus()
-        } catch {
-            interrupted = true
-            errorText = "Waiting for microphone: \(error.localizedDescription)"
-            emit()
-            sendStatus()
+        guard wanted, !captureStarting else { return }
+        captureStarting = true
+        let generation = connectionGeneration
+        armCaptureTimeout(generation: generation)
+        capture.start { [weak self] error in
+            guard let self, self.wanted, self.connectionGeneration == generation else { return }
+            self.captureStarting = false
+            self.captureTimer?.invalidate()
+            self.interrupted = error != nil
+            self.errorText = error.map { "Waiting for microphone: \($0.localizedDescription)" } ?? ""
+            if self.authenticated { self.status = self.interrupted ? "interrupted" : "connected" }
+            self.emit()
+            self.sendStatus()
+            if error == nil && self.socket == nil { self.openSocket() }
         }
     }
     @objc private func routeChanged() {
-        if wanted {
+        if wanted && !captureStarting {
             capture.stop()
             recoverCapture()
         }
     }
     @objc private func mediaReset() {
-        if wanted {
+        if wanted && !captureStarting {
             capture.stop()
             recoverCapture()
         }
@@ -357,8 +383,8 @@ final class MicController: NSObject, URLSessionWebSocketDelegate {
     @objc private func foreground() {
         emit()
         if wanted {
-            if interrupted || !capture.running { recoverCapture() }
-            if socket == nil { openSocket() }
+            if !captureStarting && (interrupted || !capture.running) { recoverCapture() }
+            if socket == nil && capture.running && !captureStarting { openSocket() }
         }
     }
     func urlSession(
@@ -373,8 +399,9 @@ final class MicController: NSObject, URLSessionWebSocketDelegate {
         didCloseWith closeCode: URLSessionWebSocketTask.CloseCode, reason: Data?
     ) {
         guard socket === webSocketTask else { return }
-        if closeCode.rawValue == 4001 || closeCode.rawValue == 4002 {
+        if [4001, 4002, 4003].contains(closeCode.rawValue) {
             disconnect()
+            status = "failed"
             errorText =
                 closeCode.rawValue == 4001
                 ? "Pairing was rejected. Scan a fresh desktop QR code."
@@ -388,6 +415,7 @@ final class MicController: NSObject, URLSessionWebSocketDelegate {
         _ session: URLSession, didReceive challenge: URLAuthenticationChallenge,
         completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void
     ) {
+        guard self.session === session else { completionHandler(.cancelAuthenticationChallenge, nil); return }
         guard
             challenge.protectionSpace.authenticationMethod == NSURLAuthenticationMethodServerTrust,
             let trust = challenge.protectionSpace.serverTrust,

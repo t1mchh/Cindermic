@@ -14,9 +14,16 @@ class CindermicPCM extends AudioWorkletProcessor {
         this.started = false;
         return;
       }
-      const packet = new DataView(data.data);
+      let packet;
+      try {
+        packet = new DataView(data.data);
+      } catch {
+        return;
+      }
       if (
         packet.byteLength < 14 ||
+        packet.byteLength > 9612 ||
+        (packet.byteLength - 12) % 2 !== 0 ||
         packet.getUint32(0, false) !== 0x434e4431 ||
         packet.getUint32(8, true) !== 48000
       )
@@ -39,7 +46,7 @@ class CindermicPCM extends AudioWorkletProcessor {
     const output = outputs[0][0];
     if (!output) return true;
     if (!this.started && this.count >= 2880) this.started = true;
-    const step = 48000 / 128;
+    const step = 48000 / sampleRate;
     for (let i = 0; i < output.length; i++) {
       if (!this.started || this.count < Math.ceil(step) + 1) {
         output[i] = 0;

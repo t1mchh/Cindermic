@@ -18,7 +18,7 @@ class CindermicCapture extends AudioWorkletProcessor {
       if (this.length !== 960) continue;
       const packet = new ArrayBuffer(1932);
       const view = new DataView(packet);
-      view.setUint32(0, 0x434e4431, true);
+      view.setUint32(0, 0x434e4431);
       view.setUint32(4, this.sequence, true);
       this.sequence++;
       view.setUint32(8, 48000, true);

@@ -28,6 +28,8 @@ else
         backend = await createBackend({ storageDirectory });
         url = backend.url;
       }
+      if (process.platform === 'darwin')
+        app.dock?.setIcon(path.join(app.getAppPath(), 'public/app-icon.png'));
       const origin = new URL(url).origin;
       session.defaultSession.setPermissionRequestHandler((contents, permission, callback) => {
         callback(
@@ -46,6 +48,7 @@ else
         minWidth: 830,
         minHeight: 720,
         title: 'Cindermic',
+        icon: path.join(app.getAppPath(), 'public/app-icon.png'),
         backgroundColor: '#101114',
         autoHideMenuBar: true,
         webPreferences: {
