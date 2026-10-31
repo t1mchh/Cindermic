@@ -1,6 +1,6 @@
 const assert = require('node:assert/strict');
 const path = require('node:path');
-const { mkdir, mkdtemp, rm } = require('node:fs/promises');
+const { mkdir, mkdtemp, rm, readFile } = require('node:fs/promises');
 const { app, BrowserWindow, session } = require('electron');
 const { createBackend } = require('../server/backend.cjs');
 const { readLevel } = require('../shared/protocol.mjs');
@@ -74,9 +74,31 @@ app
       await until(() => received >= 8 && rms > 0.001, 'browser capture reaches receiver');
       results.push('Browser microphone → AudioWorklet → WebSocket → backend: passed');
       await evaluate(
+        `Array.from(document.querySelectorAll('button')).find(button => button.textContent.includes('Record clip')).click()`,
+      );
+      await until(
+        () => evaluate(`document.body.innerText.includes('Stop recording')`),
+        'clip recording starts',
+      );
+      await evaluate(
         `Array.from(document.querySelectorAll('nav[aria-label="Main navigation"] button')).find(button => button.textContent.includes('Audio output')).click()`,
       );
       await until(() => evaluate(`!!document.querySelector('#device')`), 'output panel opens');
+      await evaluate(
+        `Array.from(document.querySelectorAll('.sound-profiles button')).find(button => button.textContent.includes('Voice')).click()`,
+      );
+      await until(
+        () =>
+          evaluate(
+            `document.querySelector('.sound-profiles button[aria-pressed="true"]').textContent.includes('Voice')`,
+          ),
+        'voice profile selected',
+      );
+      await evaluate(
+        `document.querySelector('#device').dispatchEvent(new KeyboardEvent('keydown',{code:'KeyM',bubbles:true}))`,
+      );
+      await pause(100);
+      assert.equal(backend.receiver.snapshot().muted, false);
       await evaluate(
         `const select = document.querySelector('#device'); const setter = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value').set; setter.call(select, 'default'); select.dispatchEvent(new Event('change', { bubbles: true }));`,
       );
@@ -93,12 +115,16 @@ app
         () => evaluate(`!!document.querySelector('[aria-label="Mute microphone"]')`),
         'microphone panel opens',
       );
-      await evaluate(`document.querySelector('[aria-label="Mute microphone"]').click()`);
+      await evaluate(
+        `document.dispatchEvent(new KeyboardEvent('keydown',{code:'KeyM',bubbles:true}))`,
+      );
       await until(() => backend.receiver.snapshot().muted, 'mute reaches backend');
       const atMute = received;
       await pause(250);
       assert.equal(received, atMute);
-      results.push('Mute suppresses forwarded audio: passed');
+      results.push(
+        'M shortcut mutes; output selector ignores shortcut; mute suppresses audio: passed',
+      );
       const options = {
         storageDirectory: storage,
         controlPort: Number(new URL(backend.url).port),
@@ -127,6 +153,27 @@ app
       });
       await evaluate(`document.querySelector('[aria-label="Unmute microphone"]').click()`);
       await until(() => received > 5 && rms > 0.001, 'unmute resumes audio');
+      await evaluate(
+        `Array.from(document.querySelectorAll('button')).find(button => button.textContent.includes('Stop recording')).click()`,
+      );
+      await until(() => evaluate(`!!document.querySelector('.download-clip')`), 'WAV clip ready');
+      const savedClip = path.join(storage, 'clip.wav');
+      const downloaded = new Promise((resolve, reject) =>
+        testSession.once('will-download', (_, item) => {
+          item.setSavePath(savedClip);
+          item.once('done', (_, state) =>
+            state === 'completed' ? resolve() : reject(new Error('WAV download failed')),
+          );
+        }),
+      );
+      await evaluate(`document.querySelector('.download-clip').click()`);
+      await downloaded;
+      const clip = await readFile(savedClip);
+      assert.equal(clip.toString('ascii', 0, 4), 'RIFF');
+      assert.equal(clip.readUInt32LE(24), 48000);
+      assert.ok(clip.length > 1920);
+      assert.ok(clip.subarray(44).some((value) => value !== 0));
+      results.push('Voice output profile and local WAV recording through mute/reconnect: passed');
       await evaluate(`document.querySelector('[aria-label="Disconnect source"]').click()`);
       await until(() => backend.receiver.snapshot().status === 'offline', 'intentional disconnect');
       await pause(1800);

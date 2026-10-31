@@ -1,0 +1,318 @@
+.app-shell {
+  position: relative;
+  isolation: isolate;
+}
+.app-shell::before {
+  content: '';
+  position: fixed;
+  z-index: -1;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 20% 15%, var(--accent-soft), transparent 48%),
+    radial-gradient(ellipse at 90% 65%, #a28cff06, transparent 38%);
+}
+.brand img {
+  box-shadow: 0 0 24px var(--accent-soft);
+  transition: transform 0.4s;
+}
+.brand:hover img {
+  transform: rotate(-7deg) scale(1.05);
+}
+.app-navigation button {
+  position: relative;
+  transition:
+    background 0.25s,
+    color 0.25s,
+    transform 0.2s;
+}
+.app-navigation button[aria-current='page'] {
+  box-shadow: inset 0 0 0 1px var(--accent-border);
+}
+.app-navigation button[aria-current='page']::after {
+  content: '';
+  position: absolute;
+  bottom: -13px;
+  left: 22%;
+  right: 22%;
+  height: 2px;
+  background: var(--accent-ink);
+  border-radius: 2px;
+  box-shadow: 0 0 10px var(--accent-soft);
+}
+.panel-transition {
+  animation: panel-reveal 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@keyframes panel-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.mic-card {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 50% 28%, var(--accent-soft), transparent 65%), var(--surface);
+  transition: border-color 0.3s;
+}
+.mic-card.is-live {
+  border-color: var(--accent-border);
+}
+.mic-controls {
+  position: relative;
+  min-height: 250px;
+  padding-top: 38px;
+  gap: 30px;
+}
+.mic-button {
+  position: relative;
+  z-index: 1;
+  transition:
+    transform 0.16s,
+    box-shadow 0.16s,
+    background 0.25s;
+}
+.is-live .mic-button {
+  transform: scale(calc(1 + var(--mic-energy) * 0.025));
+  box-shadow:
+    0 0 calc(15px + var(--mic-energy) * 40px) var(--accent-border),
+    0 0 0 calc(var(--mic-energy) * 12px) var(--accent-soft);
+}
+.mic-orbit {
+  position: absolute;
+  width: 204px;
+  height: 204px;
+  top: 10px;
+  left: 50%;
+  margin-left: -102px;
+  border: 1px solid var(--line-strong);
+  border-radius: 50%;
+  pointer-events: none;
+}
+.mic-orbit::before {
+  content: '';
+  position: absolute;
+  inset: 9px;
+  border: 1px dashed var(--accent-border);
+  border-radius: 50%;
+}
+.mic-orbit::after {
+  content: '';
+  position: absolute;
+  inset: -9px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+}
+.mic-orbit i {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent-ink);
+  opacity: 0.6;
+  top: 22px;
+  left: 27px;
+}
+.mic-orbit i:nth-child(2) {
+  top: auto;
+  left: auto;
+  right: 11px;
+  bottom: 44px;
+  width: 4px;
+  height: 4px;
+  background: var(--violet);
+}
+.mic-orbit i:nth-child(3) {
+  top: auto;
+  left: 65px;
+  bottom: 2px;
+  width: 3px;
+  height: 3px;
+}
+.is-live .mic-orbit,
+.is-connecting .mic-orbit {
+  animation: orbit-travel 18s linear infinite;
+}
+@keyframes orbit-travel {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.mic-under-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 20px;
+}
+.shortcut-hint {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 9px;
+  color: var(--faint);
+}
+kbd {
+  font: inherit;
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+  padding: 2px 5px;
+  color: var(--muted);
+}
+.waveform {
+  position: relative;
+  margin-top: 4px;
+  border-radius: 12px;
+  background: linear-gradient(90deg, transparent, var(--accent-soft), transparent);
+}
+.waveform::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  border-top: 1px solid var(--line);
+}
+.waveform span {
+  position: relative;
+  background: linear-gradient(to top, var(--accent-ink), var(--green));
+  transition:
+    height 0.1s,
+    opacity 0.15s;
+}
+.meter span {
+  transition: background 0.09s;
+}
+.is-live .status-indicator {
+  animation: status-breathe 2.2s ease-in-out infinite;
+  box-shadow: 0 0 9px var(--accent-border);
+}
+@keyframes status-breathe {
+  50% {
+    opacity: 0.45;
+  }
+}
+.clip-controls {
+  margin-top: 22px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line-strong);
+}
+.clip-heading {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 13px;
+  font-size: 11px;
+}
+.clip-heading strong {
+  font-weight: 500;
+}
+.clip-heading small {
+  margin-left: auto;
+  color: var(--faint);
+  font-size: 9px;
+  font-variant-numeric: tabular-nums;
+}
+.clip-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--muted);
+}
+.is-recording .clip-dot {
+  background: #ff7c8f;
+  animation: status-breathe 1s infinite;
+}
+.clip-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.clip-actions .secondary-button {
+  padding: 10px 12px;
+  font-size: 11px;
+}
+.is-recording .clip-actions > button {
+  border-color: #ff7c8f55;
+  color: #ff7c8f;
+}
+.download-clip {
+  color: var(--accent-ink);
+  animation: panel-reveal 0.25s ease-out;
+}
+.sound-profiles {
+  margin: 24px 0 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+.sound-profiles legend {
+  font-size: 12px;
+  margin-bottom: 12px;
+  padding: 0;
+}
+.sound-profiles > div {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+.sound-profiles button {
+  background: var(--surface-soft);
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  color: var(--muted);
+  padding: 14px 8px 11px;
+  font-size: 12px;
+  transition:
+    background 0.2s,
+    border-color 0.2s,
+    color 0.2s;
+}
+.sound-profiles button[aria-pressed='true'] {
+  border-color: var(--accent-border);
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+}
+.profile-visual {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: 26px;
+  margin-bottom: 12px;
+}
+.profile-visual i {
+  width: 3px;
+  border-radius: 3px;
+  background: currentColor;
+  opacity: 0.55;
+  transition: transform 0.3s;
+}
+.sound-profiles button:hover .profile-visual i:nth-child(odd) {
+  transform: scaleY(0.65);
+}
+.sound-profiles button:hover .profile-visual i:nth-child(even) {
+  transform: scaleY(1.2);
+}
+.sound-profiles p {
+  font-size: 10px;
+  color: var(--muted);
+  margin: 11px 0 0;
+}
+@media (max-width: 360px) {
+  .sound-profiles > div {
+    gap: 6px;
+  }
+  .sound-profiles button {
+    font-size: 10px;
+  }
+  .shortcut-hint {
+    font-size: 8px;
+  }
+}

@@ -37,6 +37,29 @@ export function OutputPanel({ model }: { model: CindermicModel }) {
           </button>
         </div>
       </div>
+      <fieldset className="sound-profiles">
+        <legend>{t('soundProfile')}</legend>
+        <div>
+          {(['natural', 'voice', 'warm'] as const).map((profile, index) => (
+            <button
+              key={profile}
+              aria-pressed={model.profile === profile}
+              onClick={() => model.changeProfile(profile)}
+            >
+              <span className={`profile-visual profile-${profile}`} aria-hidden="true">
+                {Array.from({ length: 7 }, (_, i) => (
+                  <i
+                    key={i}
+                    style={{ height: `${[30, 55, 80, 100, 80, 55, 30][(i + index) % 7]}%` }}
+                  />
+                ))}
+              </span>
+              {t(profile)}
+            </button>
+          ))}
+        </div>
+        <p>{t('profileHint')}</p>
+      </fieldset>
       <label className="gain-label" htmlFor="gain">
         {t('volume')}
         <strong>{model.gain}%</strong>

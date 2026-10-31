@@ -64,11 +64,13 @@ export default function Home() {
             )}
           </div>
         ))}
-      {panel === 'mic' && (
-        <MicrophonePanel model={model} elapsed={elapsed} onOutput={() => setPanel('output')} />
-      )}
-      {panel === 'output' && <OutputPanel model={model} />}
-      {panel === 'setup' && <SetupPanel />}
+      <div className="panel-transition" key={panel}>
+        {panel === 'mic' && (
+          <MicrophonePanel model={model} elapsed={elapsed} onOutput={() => setPanel('output')} />
+        )}
+        {panel === 'output' && <OutputPanel model={model} />}
+        {panel === 'setup' && <SetupPanel />}
+      </div>
       {model.pairingOpen && <PairingDialog model={model} />}
     </AppShell>
   );

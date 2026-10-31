@@ -1,10 +1,11 @@
 'use client';
 
+import { useClipRecorder } from './use-clip-recorder';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { parsePairing } from '../../shared/pairing.mjs';
 import { readLevel } from '../../shared/protocol.mjs';
-import { AudioReceiver } from '@/lib/audio-receiver';
+import { AudioReceiver, type SoundProfile } from '@/lib/audio-receiver';
 import { BrowserSender, type SenderStatus } from '@/lib/browser-sender';
 import { NativeBridge } from '@/lib/native-bridge';
 import { WebBridge } from '@/lib/web-bridge';
@@ -13,6 +14,8 @@ import type { AppState, Bridge, Command } from '@/lib/types';
 const initialState: AppState = { status: 'offline', muted: false, backendConnected: false };
 
 export function useCindermic() {
+  const clip = useClipRecorder();
+  const [profile, setProfile] = useState<SoundProfile>('natural');
   const [state, setState] = useState(initialState);
   const [native, setNative] = useState(false);
   const [scanning, setScanning] = useState(false);
@@ -67,6 +70,7 @@ export function useCindermic() {
     const audioListener = connection.onAudio((packet) => {
       const state = currentState.current;
       if (state.muted || state.status !== 'connected') return;
+      clip.recorder.current.append(packet, performance.now());
       receiver.push(packet);
       if (Date.now() - lastMeter.current < 80) return;
       lastMeter.current = Date.now();
@@ -91,6 +95,7 @@ export function useCindermic() {
     audio.current?.mute(!live);
     sender.current?.setMuted(state.muted);
     if (!live) {
+      clip.recorder.current.markGap();
       audio.current?.flush();
       setLevel(0);
       setLevels(Array(46).fill(0));
@@ -180,6 +185,7 @@ export function useCindermic() {
       if (!deviceId) throw new Error('Choose an output device first.');
       await audio.current?.start(deviceId === 'default' ? '' : deviceId);
       if (generation !== outputGeneration.current) return;
+      audio.current?.setProfile(profile);
       audio.current?.setGain(gain / 100);
       audio.current?.mute(!live);
       setRouting(true);
@@ -201,6 +207,46 @@ export function useCindermic() {
     setGain(value);
     audio.current?.setGain(value / 100);
   }
+  function changeProfile(value: SoundProfile) {
+    setProfile(value);
+    audio.current?.setProfile(value);
+    try {
+      localStorage.setItem('cindermic-profile', value);
+    } catch {}
+  }
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('cindermic-profile');
+      if (saved === 'natural' || saved === 'voice' || saved === 'warm') setProfile(saved);
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    const keydown = (event: KeyboardEvent) => {
+      if (
+        !connected ||
+        native ||
+        pairingOpen ||
+        event.repeat ||
+        event.ctrlKey ||
+        event.metaKey ||
+        event.altKey ||
+        event.code !== 'KeyM'
+      )
+        return;
+      if (
+        event.target instanceof HTMLElement &&
+        (event.target.closest('input, textarea, select') || event.target.isContentEditable)
+      )
+        return;
+      event.preventDefault();
+      void command({ type: 'mute', muted: !state.muted });
+    };
+    window.addEventListener('keydown', keydown);
+    return () => window.removeEventListener('keydown', keydown);
+  }, [connected, native, pairingOpen, state.muted]);
+
   async function copyPairing() {
     try {
       await navigator.clipboard.writeText(state.pairing || '');
@@ -230,6 +276,9 @@ export function useCindermic() {
     deviceId,
     routing,
     gain,
+    profile,
+    changeProfile,
+    clip,
     command,
     mainAction,
     disconnect,

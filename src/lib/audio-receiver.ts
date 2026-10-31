@@ -1,3 +1,5 @@
+export type SoundProfile = 'natural' | 'voice' | 'warm';
+
 type RoutedAudioContext = AudioContext & { setSinkId?: (id: string) => Promise<void> };
 
 export class AudioReceiver {
@@ -5,6 +7,8 @@ export class AudioReceiver {
   private node?: AudioWorkletNode;
   private gain?: GainNode;
   private highpass?: BiquadFilterNode;
+  private presence?: BiquadFilterNode;
+  private profile: SoundProfile = 'natural';
   private compressor?: DynamicsCompressorNode;
   private isMuted = false;
   private volume = 1;
@@ -27,7 +31,10 @@ export class AudioReceiver {
       this.node = new AudioWorkletNode(context, 'cindermic-pcm', { outputChannelCount: [1] });
       this.highpass = context.createBiquadFilter();
       this.highpass.type = 'highpass';
-      this.highpass.frequency.value = 70;
+      this.presence = context.createBiquadFilter();
+      this.presence.type = 'peaking';
+      this.presence.Q.value = 0.7;
+      this.setProfile(this.profile);
       this.compressor = context.createDynamicsCompressor();
       this.compressor.threshold.value = -8;
       this.compressor.ratio.value = 8;
@@ -37,6 +44,7 @@ export class AudioReceiver {
       this.gain.gain.value = this.isMuted ? 0 : this.volume;
       this.node
         .connect(this.highpass)
+        .connect(this.presence)
         .connect(this.gain)
         .connect(this.compressor)
         .connect(context.destination);
@@ -45,6 +53,22 @@ export class AudioReceiver {
       if (generation === this.generation) await this.stop();
       throw error;
     }
+  }
+  setProfile(profile: SoundProfile) {
+    this.profile = profile;
+    if (!this.context || !this.highpass || !this.presence) return;
+    const now = this.context.currentTime;
+    this.highpass.frequency.setTargetAtTime(
+      profile === 'voice' ? 120 : profile === 'warm' ? 50 : 70,
+      now,
+      0.04,
+    );
+    this.presence.frequency.setTargetAtTime(profile === 'warm' ? 220 : 2800, now, 0.04);
+    this.presence.gain.setTargetAtTime(
+      profile === 'natural' ? 0 : profile === 'voice' ? 3 : 2.5,
+      now,
+      0.04,
+    );
   }
   push(data: Uint8Array) {
     if (!this.node) return;
@@ -73,6 +97,8 @@ export class AudioReceiver {
     this.node = undefined;
     this.highpass?.disconnect();
     this.highpass = undefined;
+    this.presence?.disconnect();
+    this.presence = undefined;
     this.gain?.disconnect();
     this.gain = undefined;
     this.compressor?.disconnect();

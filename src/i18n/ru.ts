@@ -1,6 +1,18 @@
 import type { Messages } from './en';
 
 export const ru: Messages = {
+  quickClip: 'Быстрая запись',
+  clipLimit: 'WAV · до 2 мин',
+  recordClip: 'Записать',
+  stopRecording: 'Остановить запись',
+  saveWav: 'Сохранить WAV',
+  discardClip: 'Удалить запись',
+  muteShortcut: 'Выключить микрофон',
+  soundProfile: 'Профиль звука',
+  natural: 'Чистый',
+  voice: 'Голос',
+  warm: 'Тёплый',
+  profileHint: 'Меняет звук на компьютере. Запись сохраняет исходный звук микрофона.',
   scanQR: 'Сканировать QR-код',
   scanning: 'Сканирование…',
   scanInstruction: 'Открой QR-сканер на iPhone. Подключи оба устройства к одной сети Wi-Fi.',

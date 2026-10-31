@@ -1,6 +1,18 @@
 import type { Messages } from './en';
 
 export const de: Messages = {
+  quickClip: 'Kurzaufnahme',
+  clipLimit: 'WAV · max. 2 Min.',
+  recordClip: 'Aufnehmen',
+  stopRecording: 'Aufnahme stoppen',
+  saveWav: 'WAV speichern',
+  discardClip: 'Aufnahme verwerfen',
+  muteShortcut: 'Stummschalten',
+  soundProfile: 'Klangprofil',
+  natural: 'Natürlich',
+  voice: 'Stimme',
+  warm: 'Warm',
+  profileHint: 'Wirkt auf die Desktop-Ausgabe. Aufnahmen behalten den Originalklang.',
   scanQR: 'QR-Code scannen',
   scanning: 'Wird gescannt…',
   scanInstruction: 'Öffne den QR-Scanner auf dem iPhone. Nutze dasselbe WLAN.',

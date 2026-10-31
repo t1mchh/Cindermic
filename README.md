@@ -94,3 +94,10 @@ The web UI and control API use loopback HTTP on port 43130. The phone audio rece
 Reconnection uses bounded backoff and preserves mute. Intentional disconnect stops retries. A changed desktop IP address requires a new pairing link. Bluetooth, Wi-Fi Direct, USB, and a custom virtual microphone driver are not implemented.
 
 See [architecture](docs/architecture.md) for module boundaries and [testing](docs/testing.md) for the verification workflow. No open-source license has been selected; the project is currently marked private and unlicensed.
+
+## Microphone tools
+
+- Press **M** to mute or unmute a connected microphone on desktop. The shortcut is ignored while editing fields or pairing.
+- **Quick clip** records the original incoming microphone as a local mono 48 kHz WAV, independently of listening output. Stop, then choose **Save WAV**. Clips are limited to two minutes and remain in memory until saved; reloading discards them. Muted periods and connection gaps are silent.
+- **Natural**, **Voice**, and **Warm** apply gentle equalization to desktop listening/output. The selected profile is saved on that device and can be changed during playback. They do not modify phone capture or WAV clips.
+- The microphone halo follows actual input level. Panel transitions and connection motion respect the system’s reduced-motion preference.

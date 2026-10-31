@@ -10,7 +10,7 @@ npm run test:audio
 
 The unit and integration suite covers malformed packets, sender authentication, local Origin and Host checks, control-session authorization, mute, interruption state, session replacement, and playback-buffer behavior.
 
-The audio test runs the real exported frontend in a dedicated Electron window with Chromium's synthetic microphone. It exercises browser capture, the capture worklet, WebSocket transport, the backend receiver, playback startup, mute, backend restart, automatic reconnect, and intentional disconnect. Test output is muted and the real microphone is not used. Credentials are isolated and removed after the test.
+The audio test runs the real exported frontend in a dedicated Electron window with Chromium's synthetic microphone. It exercises browser capture, the capture worklet, WebSocket transport, the backend receiver, playback startup, mute, backend restart, automatic reconnect, and intentional disconnect. It also checks profile selection, the M mute shortcut, recording across mute/reconnect, and the actual WAV download. Test output is muted and the real microphone is not used. Credentials are isolated and removed after the test.
 
 ## Manual Mac check
 
@@ -29,3 +29,7 @@ The synthetic test establishes software behavior. Actual microphone quality, har
 `npm run ios:sync` verifies generation and synchronization of the standard Xcode project. `npm run ios:build` additionally compiles it without signing. Neither validates microphone access, screen-lock endurance, interruption recovery, battery use, or Windows driver behavior. Test those separately on the intended devices after the Mac workflow is stable.
 
 On an actual iPhone: test QR permission allow/deny, invalid QR, scanner cancellation, successful pairing, repeated Connect taps, disconnect during startup, lock/unlock for at least 15 minutes, desktop restart, a Wi-Fi interruption, and another app taking microphone priority. Verify silence while muted after reconnect. These scenarios remain **NOT DEVICE-TESTED** until recorded with hardware results.
+
+## Visual and clip update
+
+The current suite contains 26 unit/integration tests. The additional clip tests verify WAV metadata and PCM contents, silence across mute/reconnect gaps, invalid packet rejection, and the two-minute memory limit. The enhanced synthetic-audio test verifies the saved WAV file through Electron's download path, profile selection, and keyboard shortcut behavior in addition to the original streaming checks.

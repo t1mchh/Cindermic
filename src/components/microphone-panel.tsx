@@ -1,3 +1,5 @@
+import type { CSSProperties } from 'react';
+import { ClipControls } from './clip-controls';
 import { AudioLines, Mic, MicOff, RefreshCw, ScanLine, Unplug, Wifi } from 'lucide-react';
 import { useLanguage } from '@/i18n/provider';
 import { sourceName } from '@/i18n/errors';
@@ -28,7 +30,10 @@ export function MicrophonePanel({ model, elapsed, onOutput }: Props) {
   const db = level > 0 ? Math.max(-60, Math.round(20 * Math.log10(level))) : null;
   return (
     <div className="microphone-layout">
-      <section className={`mic-card ${live ? 'is-live' : ''}`}>
+      <section
+        className={`mic-card ${live ? 'is-live' : ''} ${busy ? 'is-connecting' : ''}`}
+        style={{ '--mic-energy': live ? Math.min(1, Math.sqrt(level) * 2) : 0 } as CSSProperties}
+      >
         <div className="card-top">
           <span>
             <AudioLines size={17} />
@@ -41,6 +46,11 @@ export function MicrophonePanel({ model, elapsed, onOutput }: Props) {
           <small>48 kHz · {t('mono')}</small>
         </div>
         <div className="mic-controls">
+          <div className="mic-orbit" aria-hidden="true">
+            <i />
+            <i />
+            <i />
+          </div>
           <button
             className={`mic-button ${state.muted && connected ? 'is-muted' : ''}`}
             onClick={() => void model.mainAction()}
@@ -66,7 +76,14 @@ export function MicrophonePanel({ model, elapsed, onOutput }: Props) {
             )}
             <strong>{label}</strong>
           </button>
-          {connected && <span className="session-duration">{elapsed}</span>}
+          <div className="mic-under-button">
+            {connected && <span className="session-duration">{elapsed}</span>}
+            {!phone && (
+              <span className="shortcut-hint" title={t('muteShortcut')}>
+                <kbd>M</kbd> {t('muteShortcut')}
+              </span>
+            )}
+          </div>
         </div>
         <div
           className="waveform"
@@ -144,6 +161,7 @@ export function MicrophonePanel({ model, elapsed, onOutput }: Props) {
             {t('disconnect')}
           </button>
         )}
+        {!phone && <ClipControls model={model} />}
         {!phone && (
           <button className="text-button" onClick={onOutput}>
             {t('navOutput')} →
