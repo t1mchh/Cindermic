@@ -18,6 +18,8 @@ try {
     path.join(root, 'node_modules/electron-builder/cli.js'),
     '--mac',
     'dir',
+    '--publish',
+    'never',
     `--config.directories.output=${staging}`,
   ]);
   const app = path.join(staging, process.arch === 'arm64' ? 'mac-arm64' : 'mac', 'Cindermic.app');

@@ -1,6 +1,6 @@
 {
   "name": "cindermic",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "private": true,
   "description": "Your iPhone. Your microphone. A local, personal Wi-Fi mic.",
   "license": "UNLICENSED",
@@ -17,8 +17,8 @@
     "test": "node --test tests/*.test.cjs",
     "test:audio": "npm run build && electron tests/audio.e2e.cjs",
     "desktop": "npm run build && electron .",
-    "dist:win": "npm run build && electron-builder --win nsis",
-    "dist:win:zip": "npm run build && electron-builder --win zip --x64",
+    "dist:win": "npm run build && electron-builder --win nsis --publish never",
+    "dist:win:zip": "npm run build && electron-builder --win zip --x64 --publish never",
     "dist:mac": "npm run build && node scripts/package-mac.mjs",
     "ios:sync": "npm run build && node scripts/ios.mjs sync",
     "ios": "npm run build && node scripts/ios.mjs open",
