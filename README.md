@@ -15,14 +15,14 @@
 
 ## Download
 
-**Desktop v0.3.0** — the desktop app includes its local audio receiver. No Node.js installation is needed to use the downloads.
+**Desktop v0.3.1** — the desktop app includes its local audio receiver. No Node.js installation is needed to use the downloads.
 
 | Platform                             | Download                                                                                                                   |
 | ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------- |
-| macOS · Apple Silicon (M1 and newer) | [Download Mac ARM64 ZIP](https://github.com/t1mchh/Cindermic/releases/download/v0.3.0/Cindermic-0.3.0-mac-arm64.zip)       |
-| macOS · Intel                        | [Download Mac Intel ZIP](https://github.com/t1mchh/Cindermic/releases/download/v0.3.0/Cindermic-0.3.0-mac-x64.zip)         |
-| Windows · x64                        | [Download Windows installer](https://github.com/t1mchh/Cindermic/releases/download/v0.3.0/Cindermic-0.3.0-windows-x64.exe) |
-| Windows · x64 portable               | [Download Windows ZIP](https://github.com/t1mchh/Cindermic/releases/download/v0.3.0/Cindermic-0.3.0-windows-x64.zip)       |
+| macOS · Apple Silicon (M1 and newer) | [Download Mac ARM64 ZIP](https://github.com/t1mchh/Cindermic/releases/download/v0.3.1/Cindermic-0.3.1-mac-arm64.zip)       |
+| macOS · Intel                        | [Download Mac Intel ZIP](https://github.com/t1mchh/Cindermic/releases/download/v0.3.1/Cindermic-0.3.1-mac-x64.zip)         |
+| Windows · x64                        | [Download Windows installer](https://github.com/t1mchh/Cindermic/releases/download/v0.3.1/Cindermic-0.3.1-windows-x64.exe) |
+| Windows · x64 portable               | [Download Windows ZIP](https://github.com/t1mchh/Cindermic/releases/download/v0.3.1/Cindermic-0.3.1-windows-x64.zip)       |
 
 [All releases, notes, and SHA-256 checksums →](https://github.com/t1mchh/Cindermic/releases)
 

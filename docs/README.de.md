@@ -8,11 +8,11 @@
 
 ## Downloads
 
-| Computer            | Version 0.3.0                                                                                                                                                                                                                |
+| Computer            | Version 0.3.1                                                                                                                                                                                                                |
 | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Mac · Apple Silicon | [ARM64 ZIP](https://github.com/t1mchh/Cindermic/releases/download/v0.3.0/Cindermic-0.3.0-mac-arm64.zip)                                                                                                                      |
-| Mac · Intel         | [x64 ZIP](https://github.com/t1mchh/Cindermic/releases/download/v0.3.0/Cindermic-0.3.0-mac-x64.zip)                                                                                                                          |
-| Windows · x64       | [EXE-Installer](https://github.com/t1mchh/Cindermic/releases/download/v0.3.0/Cindermic-0.3.0-windows-x64.exe) · [Portable ZIP](https://github.com/t1mchh/Cindermic/releases/download/v0.3.0/Cindermic-0.3.0-windows-x64.zip) |
+| Mac · Apple Silicon | [ARM64 ZIP](https://github.com/t1mchh/Cindermic/releases/download/v0.3.1/Cindermic-0.3.1-mac-arm64.zip)                                                                                                                      |
+| Mac · Intel         | [x64 ZIP](https://github.com/t1mchh/Cindermic/releases/download/v0.3.1/Cindermic-0.3.1-mac-x64.zip)                                                                                                                          |
+| Windows · x64       | [EXE-Installer](https://github.com/t1mchh/Cindermic/releases/download/v0.3.1/Cindermic-0.3.1-windows-x64.exe) · [Portable ZIP](https://github.com/t1mchh/Cindermic/releases/download/v0.3.1/Cindermic-0.3.1-windows-x64.zip) |
 
 Für die Downloads ist keine Node.js-Installation erforderlich. Auf dem Mac das Archiv entpacken und Cindermic.app nach Applications verschieben. Unter Windows den Installer ausführen oder das portable Archiv entpacken und Cindermic.exe starten. Die persönlichen Builds sind auf macOS nicht notarisiert und haben unter Windows kein Herausgeberzertifikat; das Betriebssystem kann einen Prüfhinweis anzeigen.
 

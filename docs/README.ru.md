@@ -8,11 +8,11 @@
 
 ## Скачать
 
-| Компьютер           | Сборка v0.3.0                                                                                                                                                                                                                 |
+| Компьютер           | Сборка v0.3.1                                                                                                                                                                                                                 |
 | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Mac · Apple Silicon | [ZIP ARM64](https://github.com/t1mchh/Cindermic/releases/download/v0.3.0/Cindermic-0.3.0-mac-arm64.zip)                                                                                                                       |
-| Mac · Intel         | [ZIP x64](https://github.com/t1mchh/Cindermic/releases/download/v0.3.0/Cindermic-0.3.0-mac-x64.zip)                                                                                                                           |
-| Windows · x64       | [Установщик EXE](https://github.com/t1mchh/Cindermic/releases/download/v0.3.0/Cindermic-0.3.0-windows-x64.exe) · [Portable ZIP](https://github.com/t1mchh/Cindermic/releases/download/v0.3.0/Cindermic-0.3.0-windows-x64.zip) |
+| Mac · Apple Silicon | [ZIP ARM64](https://github.com/t1mchh/Cindermic/releases/download/v0.3.1/Cindermic-0.3.1-mac-arm64.zip)                                                                                                                       |
+| Mac · Intel         | [ZIP x64](https://github.com/t1mchh/Cindermic/releases/download/v0.3.1/Cindermic-0.3.1-mac-x64.zip)                                                                                                                           |
+| Windows · x64       | [Установщик EXE](https://github.com/t1mchh/Cindermic/releases/download/v0.3.1/Cindermic-0.3.1-windows-x64.exe) · [Portable ZIP](https://github.com/t1mchh/Cindermic/releases/download/v0.3.1/Cindermic-0.3.1-windows-x64.zip) |
 
 Для готовых сборок Node.js не нужен. На Mac распакуй архив и перенеси приложение в Applications. На Windows запусти установщик либо распакуй portable-версию и открой Cindermic.exe. Сборки предназначены для личного использования: Mac-приложение не нотарифицировано, а Windows-приложение не подписано сертификатом издателя. Система может показать предупреждение о проверке разработчика.
 

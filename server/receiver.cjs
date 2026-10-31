@@ -203,10 +203,19 @@ class Receiver extends EventEmitter {
   }
   async close() {
     clearInterval(this.timer);
+    const serverClosed = this.server.listening
+      ? new Promise((resolve) => this.server.close(resolve))
+      : Promise.resolve();
+    const webSocketsClosed = new Promise((resolve) => this.wss.close(resolve));
     for (const ws of this.clients) ws.terminate();
-    for (const socket of this.connections) socket.destroy();
-    await new Promise((resolve) => this.wss.close(resolve));
-    if (this.server.listening) await new Promise((resolve) => this.server.close(resolve));
+    const connectionsClosed = [...this.connections].map(
+      (socket) =>
+        new Promise((resolve) => {
+          socket.once('close', resolve);
+          socket.destroy();
+        }),
+    );
+    await Promise.all([serverClosed, webSocketsClosed, ...connectionsClosed]);
   }
 }
 module.exports = { Receiver, validPacket, equalToken, localAddresses };
