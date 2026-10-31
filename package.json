@@ -1,6 +1,6 @@
 {
   "name": "cindermic",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "description": "Your iPhone. Your microphone. A local, personal Wi-Fi mic.",
   "license": "UNLICENSED",
@@ -73,7 +73,8 @@
             "x64"
           ]
         }
-      ]
+      ],
+      "artifactName": "${productName}-${version}-windows-${arch}.${ext}"
     },
     "nsis": {
       "oneClick": false,
@@ -95,5 +96,14 @@
   },
   "engines": {
     "node": ">=24"
+  },
+  "author": "t1mchh",
+  "homepage": "https://github.com/t1mchh/Cindermic#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/t1mchh/Cindermic.git"
+  },
+  "bugs": {
+    "url": "https://github.com/t1mchh/Cindermic/issues"
   }
 }

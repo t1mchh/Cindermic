@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="420" viewBox="0 0 1280 420" role="img" aria-labelledby="title desc">
+  <title id="title">Cindermic — Your iPhone. Your microphone.</title>
+  <desc id="desc">A local wireless microphone for macOS and Windows, with iPhone pairing, live audio controls, and no cloud account.</desc>
+  <defs>
+    <radialGradient id="glow"><stop stop-color="#e1fa36" stop-opacity=".16"/><stop offset="1" stop-color="#e1fa36" stop-opacity="0"/></radialGradient>
+    <linearGradient id="wave" x2="0" y2="1"><stop stop-color="#e1fa36"/><stop offset="1" stop-color="#a28cff"/></linearGradient>
+    <pattern id="dots" width="24" height="24" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r="1" fill="#ffffff" opacity=".05"/></pattern>
+  </defs>
+  <rect width="1280" height="420" rx="24" fill="#101114"/>
+  <rect width="1280" height="420" rx="24" fill="url(#dots)"/>
+  <ellipse cx="1020" cy="210" rx="350" ry="320" fill="url(#glow)"/>
+  <path d="M54 61h38" stroke="#e1fa36" stroke-width="4"/>
+  <text x="108" y="67" font-family="Arial,Helvetica,sans-serif" font-size="13" font-weight="700" letter-spacing="3" fill="#a7aaa4">LOCAL AUDIO. FULL CONTROL.</text>
+  <text x="52" y="174" font-family="Arial,Helvetica,sans-serif" font-size="80" font-weight="800" letter-spacing="-4" fill="#f5f5f0">Cinder<tspan fill="#e1fa36">mic</tspan></text>
+  <text x="56" y="233" font-family="Arial,Helvetica,sans-serif" font-size="28" fill="#e5e7df">Your iPhone. Your microphone.</text>
+  <text x="56" y="271" font-family="Arial,Helvetica,sans-serif" font-size="18" fill="#898c96">Wireless audio for macOS and Windows.</text>
+  <rect x="56" y="324" width="82" height="32" rx="8" fill="#e1fa3615" stroke="#e1fa3633"/>
+  <text x="97" y="345" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="12" font-weight="700" fill="#e1fa36">Wi-Fi</text>
+  <text x="158" y="345" font-family="Arial,Helvetica,sans-serif" font-size="12" letter-spacing="1.5" fill="#898c96">EN / DE / RU</text>
+  <g transform="translate(1020 205)">
+    <circle r="144" fill="none" stroke="#ffffff0b"/>
+    <circle r="119" fill="none" stroke="#e1fa3624" stroke-dasharray="3 9"/>
+    <circle r="96" fill="#181a1e" stroke="#ffffff12"/>
+    <g stroke="url(#wave)" stroke-width="9" stroke-linecap="round">
+      <path d="M-66-10v20M-44-27v54M-22-45v90M0-64v128M22-45v90M44-27v54M66-10v20"/>
+    </g>
+    <circle cx="-102" cy="-102" r="5" fill="#e1fa36"/>
+    <circle cx="120" cy="79" r="4" fill="#a28cff"/>
+  </g>
+</svg>

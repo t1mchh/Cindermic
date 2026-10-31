@@ -1,103 +1,111 @@
-# Cindermic
+<div align="center">
 
-A personal microphone app built with Next.js, a local Node.js backend, and optional Electron and iOS wrappers.
+![Cindermic — Your iPhone. Your microphone.](.github/assets/hero.svg)
 
-## Develop on your Mac
+**Turn your iPhone into a wireless microphone for your computer.**
 
-Requires Node.js 24 and npm.
+[![Release](https://img.shields.io/github/v/release/t1mchh/Cindermic?style=flat-square&color=e1fa36&labelColor=181a1e)](https://github.com/t1mchh/Cindermic/releases)
+[![Build](https://github.com/t1mchh/Cindermic/actions/workflows/build.yml/badge.svg)](https://github.com/t1mchh/Cindermic/actions/workflows/build.yml)
+[![Platforms](https://img.shields.io/badge/desktop-macOS%20%7C%20Windows-181a1e?style=flat-square)](#download)
+[![Languages](https://img.shields.io/badge/languages-EN%20%2F%20DE%20%2F%20RU-a28cff?style=flat-square&labelColor=181a1e)](#features)
+
+[Download](#download) · [Get connected](#get-connected) · [Build it yourself](#build-it-yourself) · [Русский](docs/README.ru.md) · [Deutsch](docs/README.de.md)
+
+</div>
+
+## Download
+
+**Desktop v0.3.0** — the desktop app includes its local audio receiver. No Node.js installation is needed to use the downloads.
+
+| Platform                             | Download                                                                                                                   |
+| ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------- |
+| macOS · Apple Silicon (M1 and newer) | [Download Mac ARM64 ZIP](https://github.com/t1mchh/Cindermic/releases/download/v0.3.0/Cindermic-0.3.0-mac-arm64.zip)       |
+| macOS · Intel                        | [Download Mac Intel ZIP](https://github.com/t1mchh/Cindermic/releases/download/v0.3.0/Cindermic-0.3.0-mac-x64.zip)         |
+| Windows · x64                        | [Download Windows installer](https://github.com/t1mchh/Cindermic/releases/download/v0.3.0/Cindermic-0.3.0-windows-x64.exe) |
+| Windows · x64 portable               | [Download Windows ZIP](https://github.com/t1mchh/Cindermic/releases/download/v0.3.0/Cindermic-0.3.0-windows-x64.zip)       |
+
+[All releases, notes, and SHA-256 checksums →](https://github.com/t1mchh/Cindermic/releases)
+
+The iPhone companion is built and installed with Xcode; it is not on the App Store. See [iPhone setup](#iphone-companion).
+
+**Installation:** on Mac, extract the ZIP and move `Cindermic.app` to Applications. On Windows, run the installer, or extract the portable ZIP and launch `Cindermic.exe`. Personal-release builds are not notarized for macOS or signed with a Windows publisher certificate, so your OS may show a verification warning.
+
+## Features
+
+- **Pair in seconds** — scan the desktop QR code on your iPhone, or paste the pairing link.
+- **Local Wi-Fi audio** — direct device connection, encrypted phone transport, and no cloud account.
+- **Mute from either device** — synchronized controls and an `M` keyboard shortcut on desktop.
+- **Automatic reconnect** — recover after temporary network loss while preserving mute.
+- **Live visuals** — real microphone level, waveform, reactive halo, and reduced-motion support.
+- **Sound profiles** — Natural, Voice, and Warm equalization for desktop output.
+- **Quick clips** — record the original microphone to a local WAV, up to two minutes.
+- **Make it yours** — dark/light themes and English, German, and Russian interfaces.
+
+<div align="center">
+<img src=".github/assets/sound-profiles.png" alt="Cindermic dark-mode interface with Natural, Voice and Warm profiles" width="1000" />
+</div>
+
+## Get connected
+
+1. Open Cindermic on your computer and keep its QR code visible.
+2. Connect your iPhone and computer to the **same Wi-Fi network**.
+3. Open the iPhone app, tap **Scan QR code**, and allow camera, microphone, and local-network access.
+4. Scan the desktop code and speak. The computer's meter should react to your voice.
+5. To listen, choose headphones in **Audio output**, then enable output. To record, use **Quick clip → Record clip → Stop recording → Save WAV**.
+
+If pairing times out, check that the desktop app is open and that the firewall permits local-network access to its audio receiver on TCP **43129**. If the desktop's IP changes, scan its new QR code. The manual fallback uses the complete pairing link, which contains the address and the device credentials; keep it private.
+
+### Discord, OBS, and games
+
+Receiving audio in Cindermic is separate from appearing as a system microphone. Use a separately installed virtual audio device to route its output into another app. For example, with VB-CABLE on Windows, send Cindermic output to **CABLE Input** and select **CABLE Output** as the target app's microphone.
+
+### iPhone companion
+
+Requires a Mac with Xcode and an iPhone running iOS 17 or newer. From the source checkout:
 
 ```sh
+npm ci
+npm run ios
+```
+
+In Xcode, select the **App** scheme, your iPhone, and your development team under **Signing & Capabilities**, then press **Run**. Enable Developer Mode and trust your developer profile if iOS requests it. The interface is shared with desktop; native Swift handles microphone capture and the QR camera.
+
+Basic iPhone operation has been reported working by the project owner. Screen-lock endurance, Wi-Fi roaming, and recovery from another app taking the microphone still need systematic device testing. iOS may interrupt recording when another app uses its microphone.
+
+## Build it yourself
+
+Requires **Node.js 24+** and npm.
+
+```sh
+git clone https://github.com/t1mchh/Cindermic.git
+cd Cindermic
 npm ci
 npm run dev
 ```
 
-Open [localhost:3000](http://localhost:3000). Both the frontend and backend start together and reload when their source changes.
+Open [localhost:3000](http://localhost:3000). For a desktop window, use `npm run desktop`.
 
-1. Press **Start mic** and allow microphone access.
-2. Speak and check the input meter. Audio passes through the browser capture worklet and the real backend receiver.
-3. Open **Audio output**, choose headphones or your system default, and press **Enable output**.
-4. Test mute and disconnect from the microphone screen.
+| Command                | Purpose                                                                |
+| ---------------------- | ---------------------------------------------------------------------- |
+| `npm run check`        | TypeScript checks                                                      |
+| `npm test`             | Unit and integration tests                                             |
+| `npm run test:audio`   | Synthetic microphone, playback, mute, reconnect, and WAV download test |
+| `npm run dist:mac`     | Build and verify a Mac ZIP on macOS                                    |
+| `npm run dist:win`     | Build the Windows installer on Windows                                 |
+| `npm run dist:win:zip` | Build a portable Windows ZIP                                           |
+| `npm run ios`          | Export the interface, sync the native plugin, and open Xcode           |
+| `npm run ios:build`    | Compile the iPhone app without signing or installing it                |
 
-Use headphones for listening tests to avoid feedback. Audio output starts disabled. You do not need an iPhone or Xcode for this workflow.
+Tagging a version (`v*`) runs native desktop builds in GitHub Actions and publishes the downloads after every build succeeds. Build products belong in Releases, not in the source tree. Local pairing identities, private certificates, and generated projects are Git-ignored.
 
-The language selector supports English, German, and Russian. Your choice and theme are saved on each device. Edit translations in `src/i18n/`; permission prompts follow the iPhone’s app/system language.
+## Under the hood
 
-## Commands
+**Next.js + React** interface · **Electron** desktop · **Node.js + TLS WebSocket** receiver · **Capacitor + Swift** iPhone companion.
 
-| Command                | Purpose                                                     |
-| ---------------------- | ----------------------------------------------------------- |
-| `npm run dev`          | Develop frontend and backend together                       |
-| `npm run build`        | Export the frontend to `out/`                               |
-| `npm start`            | Serve the production build with the local backend           |
-| `npm run desktop`      | Build and open the Electron desktop app                     |
-| `npm run check`        | Check TypeScript                                            |
-| `npm test`             | Run backend, protocol, and playback-buffer tests            |
-| `npm run test:audio`   | Run the full browser audio test with a synthetic microphone |
-| `npm run format`       | Format source files                                         |
-| `npm run ios`          | Build, sync the iOS project, and open Xcode                 |
-| `npm run ios:sync`     | Build and sync the iOS project without opening Xcode        |
-| `npm run ios:build`    | Generate and compile the iOS project without signing        |
-| `npm run dist:mac`     | Package the Mac desktop app as a ZIP                        |
-| `npm run dist:win`     | Build a Windows installer on Windows                        |
-| `npm run dist:win:zip` | Build a portable Windows ZIP                                |
+Audio is mono PCM16 at 48 kHz. Capture and playback queues are bounded; connection setup has timeouts. The waveform reflects real received audio. Sound profiles affect desktop output; WAV clips retain the original mic signal. No subscription, account, cloud relay, or telemetry is required.
 
-`npm run build` does not run Xcode or touch an iPhone.
+[Architecture](docs/architecture.md) · [Development guide](docs/development.md) · [Testing](docs/testing.md) · [Contributing](CONTRIBUTING.md) · [Audit](AUDIT.md)
 
-## Source layout
+## Scope
 
-```text
-src/
-  app/          Next.js entry points
-  components/   Interface panels and dialogs
-  hooks/        App state and audio lifecycle
-  i18n/         English, German, Russian dictionaries and saved language
-  lib/          Browser capture, playback, and platform bridges
-  styles/       Theme, desktop layout, and responsive styles
-server/         Local HTTP API, WebSocket control, and audio receiver
-shared/         Audio protocol constants and helpers
-desktop/        Electron window and backend startup
-native/audio/   Local Capacitor plugin for native iPhone audio
-native/locales/ iOS microphone and network permission translations
-scripts/        iOS generation and asset tooling
-tests/          Unit, integration, and browser audio tests
-docs/           Architecture and testing notes
-```
-
-Generated files live in `out/`, `.next/`, `ios/`, and `release/`. Pairing credentials and local settings live in `.local/` for the standalone backend, or Electron's user-data directory for the desktop app. These directories are ignored by Git.
-
-## Move to Xcode
-
-Once the Mac workflow is ready:
-
-```sh
-npm run ios
-```
-
-This exports the same Next.js interface, creates a standard Capacitor iOS project if necessary, syncs the local Swift audio plugin, and opens Xcode. Choose **App → Signing & Capabilities → Team**, select your connected iPhone as the run destination, and press **Run**. The project requires iOS 17 or newer. For a compile check without signing or installing, run `npm run ios:build`.
-
-Make interface changes in `src/`, native audio changes in `native/audio/`, then run `npm run ios` again. The generated `ios/` project is not the source of truth. The sync script adds camera, microphone, local-network, and background-audio settings without installing or launching the app on a device.
-
-On the iPhone, tap **Scan QR code**, allow camera access, and scan the desktop code. Manual connection accepts the complete pairing link copied from the desktop. The link supplies the address, sender token, and pinned certificate; a bare IP address is insufficient. Pairing links have no built-in expiry. Keep them private.
-
-The scanner uses Apple VisionKit on supported iPhones, with a manual fallback when camera access is denied or scanning is unavailable. Camera scanning, native microphone capture, locked-screen behavior, network roaming, and interruption recovery are **NOT DEVICE-TESTED**. iOS may interrupt capture when another app records audio. Android, Bluetooth, Wi-Fi Direct, and USB are not supported.
-
-## Other applications
-
-To appear as a microphone in Discord, OBS, or games, route Cindermic into a separately installed virtual audio device. The application does not install a system driver. On Windows with VB-CABLE, play to **CABLE Input** and select **CABLE Output** as the microphone in the target app.
-
-Mac packaging signs a temporary build outside synced Documents folders and writes `release/Cindermic-mac-arm64.zip` (or `x64`). It uses an ad-hoc signature for personal use; the archive is not notarized for public distribution.
-
-## Connection scope
-
-The web UI and control API use loopback HTTP on port 43130. The phone audio receiver uses TLS on port 43129. The development frontend uses port 3000. No account, subscription, cloud relay, or telemetry is required.
-
-Reconnection uses bounded backoff and preserves mute. Intentional disconnect stops retries. A changed desktop IP address requires a new pairing link. Bluetooth, Wi-Fi Direct, USB, and a custom virtual microphone driver are not implemented.
-
-See [architecture](docs/architecture.md) for module boundaries and [testing](docs/testing.md) for the verification workflow. No open-source license has been selected; the project is currently marked private and unlicensed.
-
-## Microphone tools
-
-- Press **M** to mute or unmute a connected microphone on desktop. The shortcut is ignored while editing fields or pairing.
-- **Quick clip** records the original incoming microphone as a local mono 48 kHz WAV, independently of listening output. Stop, then choose **Save WAV**. Clips are limited to two minutes and remain in memory until saved; reloading discards them. Muted periods and connection gaps are silent.
-- **Natural**, **Voice**, and **Warm** apply gentle equalization to desktop listening/output. The selected profile is saved on that device and can be changed during playback. They do not modify phone capture or WAV clips.
-- The microphone halo follows actual input level. Panel transitions and connection motion respect the system’s reduced-motion preference.
+This is an early personal project. Wi-Fi is implemented; Android, Bluetooth, Wi-Fi Direct, USB, and a bundled virtual microphone driver are not. Builds and automated checks do not substitute for testing audio hardware and OS permissions on every platform. Source is published without an open-source license grant (`UNLICENSED`).
