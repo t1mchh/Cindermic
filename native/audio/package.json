@@ -1,0 +1,23 @@
+{
+  "name": "@cindermic/audio",
+  "version": "0.2.0",
+  "private": true,
+  "main": "index.js",
+  "capacitor": {
+    "ios": {
+      "src": "ios"
+    },
+    "android": {
+      "src": "android"
+    }
+  },
+  "dependencies": {
+    "@capacitor/core": "^8.6.0"
+  },
+  "keywords": [
+    "capacitor",
+    "audio",
+    "microphone",
+    "cindermic"
+  ]
+}

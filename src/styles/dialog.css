@@ -1,0 +1,131 @@
+.pair-modal {
+  position: relative;
+  all: unset;
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--line-strong);
+  border-radius: 16px;
+  padding: 34px;
+  width: 410px;
+  max-width: calc(100vw - 32px);
+  max-height: 90dvh;
+  overflow: auto;
+  text-align: center;
+  box-shadow: 0 30px 100px #00000050;
+  animation: fadeIn 0.3s ease-out forwards;
+}
+.pair-modal::backdrop {
+  background: rgba(0, 0, 0, 0.6);
+  animation: fadeIn 0.3s ease-out forwards;
+}
+.modal-close {
+  position: absolute;
+  top: 13px;
+  right: 13px;
+}
+.pair-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 53px;
+  height: 53px;
+  border-radius: 13px;
+  color: var(--accent-ink);
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-border);
+  margin-bottom: 20px;
+}
+.pair-modal h2 {
+  font: 600 24px var(--display);
+  letter-spacing: -0.8px;
+  margin: 0;
+}
+.pair-modal > p {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.8;
+  margin: 12px 0 23px;
+}
+.pair-qr {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto 20px;
+  padding: 13px;
+  background: #fff;
+  border-radius: 10px;
+}
+.pair-network {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  font-size: 10px;
+  color: var(--muted);
+  margin-bottom: 14px;
+}
+.pair-network select {
+  font-size: 10px;
+  padding: 8px;
+}
+.pair-modal textarea {
+  display: block;
+  width: 100%;
+  min-height: 76px;
+  resize: vertical;
+  margin: 12px 0 17px;
+  line-height: 1.7;
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+.pair-modal > label {
+  font-size: 10px;
+  color: var(--muted);
+}
+.pair-modal > small {
+  display: block;
+  color: var(--faint);
+  font-size: 9px;
+  line-height: 1.8;
+  margin-top: 17px;
+}
+.pair-security {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 9px;
+  border-top: 1px solid var(--line);
+  padding-top: 18px;
+  margin-top: 24px;
+}
+.mic-button:disabled {
+  opacity: 0.45;
+}
+@media (max-width: 640px) {
+  .pair-modal {
+    padding: 32px 23px 25px;
+  }
+  .pair-modal textarea {
+    font-size: 16px;
+  }
+  .pair-network select {
+    font-size: 12px;
+  }
+  .pair-modal .icon-button {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

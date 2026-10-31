@@ -1,0 +1,101 @@
+{
+  "name": "cindermic",
+  "version": "0.2.0",
+  "private": true,
+  "description": "Your iPhone. Your microphone. A local, personal Wi-Fi mic.",
+  "license": "UNLICENSED",
+  "main": "desktop/main.cjs",
+  "scripts": {
+    "dev": "concurrently -k -n server,web \"npm:dev:server\" \"npm:dev:web\"",
+    "dev:web": "next dev --hostname 127.0.0.1",
+    "dev:server": "node --watch server/index.cjs",
+    "build": "next build",
+    "start": "node server/index.cjs",
+    "check": "next typegen && tsc --noEmit",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "node --test tests/*.test.cjs",
+    "test:audio": "npm run build && electron tests/audio.e2e.cjs",
+    "desktop": "npm run build && electron .",
+    "dist:win": "npm run build && electron-builder --win nsis",
+    "dist:win:zip": "npm run build && electron-builder --win zip --x64",
+    "dist:mac": "npm run build && electron-builder --mac dir",
+    "android:sync": "npm run build && npx cap sync android",
+    "android": "npm run build && npx cap open android",
+    "android:build": "npm run build && npx cap sync android && cd android && ./gradlew assembleDebug",
+    "ios:sync": "npm run build && node scripts/ios.mjs sync",
+    "ios": "npm run build && node scripts/ios.mjs open",
+    "ios:build": "npm run ios:sync && xcodebuild -project ios/App/App.xcodeproj -scheme App -destination generic/platform=iOS CODE_SIGNING_ALLOWED=NO build"
+  },
+  "dependencies": {
+    "@capacitor/core": "^8.6.0",
+    "@cindermic/audio": "file:native/audio",
+    "qrcode": "^1.5.4",
+    "selfsigned": "5.5.0",
+    "ws": "8.22.0"
+  },
+  "devDependencies": {
+    "@capacitor/android": "^8.6.0",
+    "@capacitor/cli": "^8.6.0",
+    "@capacitor/ios": "^8.6.0",
+    "@fontsource/barlow-condensed": "^5.3.0",
+    "@fontsource/dm-sans": "^5.3.0",
+    "@fontsource/manrope": "^5.3.0",
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "concurrently": "^10.0.6",
+    "electron": "45.2.0",
+    "electron-builder": "26.18.0",
+    "lucide-react": "^0.468.0",
+    "next": "16.4.3",
+    "prettier": "^3.9.10",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "typescript": "^5.9.0",
+    "xcode": "^4.0.0"
+  },
+  "build": {
+    "appId": "local.cindermic.desktop",
+    "productName": "Cindermic",
+    "icon": "public/app-icon.png",
+    "directories": {
+      "output": "cdist"
+    },
+    "files": [
+      "out/**/*",
+      "desktop/**/*",
+      "server/**/*",
+      "shared/**/*",
+      "package.json",
+      "capacitor.config.ts",
+      "scripts/**/*",
+      "native/**/*",
+      "node_resources/**/*"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    },
+    "mac": {
+      "target": "dir",
+      "category": "public.app-category.utilities",
+      "extendInfo": {
+        "NSMicrophoneUsageDescription": "Use your microphone to test audio capture in Cindermic."
+      }
+    }
+  },
+  "engines": {
+    "node": ">=24"
+  }
+}
