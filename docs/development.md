@@ -85,7 +85,7 @@ The scanner uses Apple VisionKit on supported iPhones, with a manual fallback wh
 
 To appear as a microphone in Discord, OBS, or games, route Cindermic into a separately installed virtual audio device. The application does not install a system driver. On Windows with VB-CABLE, play to **CABLE Input** and select **CABLE Output** as the microphone in the target app.
 
-Mac packaging signs a temporary build outside synced Documents folders and writes `release/Cindermic-0.3.2-mac-arm64.zip` (or `x64`). It uses an ad-hoc signature for personal use; the archive is not notarized for public distribution.
+Mac packaging signs a temporary build outside synced Documents folders and writes `release/Cindermic-0.3.3-mac-arm64.zip` (or `x64`). It uses an ad-hoc signature for personal use; the archive is not notarized for public distribution.
 
 ## Connection scope
 
